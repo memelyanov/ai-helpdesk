@@ -1,0 +1,91 @@
+# Specification Quality Checklist: Project Scaffolding
+
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-08-13
+**Feature**: [spec.md](../spec.md)
+
+## Content Quality
+
+- [x] No implementation details (languages, frameworks, APIs)
+- [x] Focused on user value and business needs
+- [x] Written for non-technical stakeholders
+- [x] All mandatory sections completed
+
+## Requirement Completeness
+
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
+- [x] Success criteria are measurable
+- [x] Success criteria are technology-agnostic (no implementation details)
+- [x] All acceptance scenarios are defined
+- [x] Edge cases are identified
+- [x] Scope is clearly bounded
+- [x] Dependencies and assumptions identified
+
+## Feature Readiness
+
+- [x] All functional requirements have clear acceptance criteria
+- [x] User scenarios cover primary flows
+- [x] Feature meets measurable outcomes defined in Success Criteria
+- [x] No implementation details leak into specification
+
+## Validation Notes
+
+**Iteration 1 findings and resolutions:**
+
+1. *No implementation details* — The feature request names Docker Compose, Spring and Angular
+   directly. Naming them in the spec would have failed this item and duplicated a decision the
+   constitution has already frozen. Resolved by describing the three parts by role (database
+   environment, backend service, frontend application) and recording in Assumptions that the
+   named technologies come from `.specify/memory/constitution.md` and belong in `plan.md`.
+
+2. *Written for non-technical stakeholders* — Partially inherent to the feature: the only user of
+   a scaffold is a developer. Resolved by stating the audience explicitly at the top of User
+   Scenarios rather than pretending an end-user exists, and by keeping every acceptance scenario
+   expressed as an observable outcome rather than a code-level assertion.
+
+3. *Success criteria are measurable* — First draft carried "the stack starts reliably", which is
+   not verifiable. Replaced with SC-001 (under 15 minutes), SC-002 (exactly one command per
+   part), SC-003 (zero failures, zero skips), SC-004 (100% data preserved), SC-005 (three
+   single-part startups), SC-006 (zero secrets), SC-007 (first attempt, no undocumented edits).
+
+4. *Scope is clearly bounded* — FR-016 states the exclusion positively and by name (no upload,
+   parsing, chunking, embedding, retrieval, or answer generation), rather than leaving "no
+   functionality yet" implicit.
+
+5. *Constitution alignment* — Principle II (TDD) makes a test harness part of the scaffold rather
+   than a later addition; captured as FR-008, FR-012 and the closing assumption. Principle VI
+   (Data Sovereignty) motivates FR-002's vector-storage requirement being present from the start.
+   Principle I (Spec-First) is satisfied by this document preceding any scaffold code.
+
+**Status after iteration 1**: All items pass. No open clarifications.
+
+**Iteration 2 — re-validated 2026-08-13 after `/speckit-clarify` (Azure OpenAI)**
+
+Five clarifications were integrated. No checkbox changed state; all 16 still pass. Two items were
+re-examined closely because the change put pressure on them:
+
+6. *No implementation details* — the spec now names Azure OpenAI and four concrete environment
+   variables. Judged still passing, on this boundary: every **functional requirement**
+   (FR-018–FR-023) is written provider-neutral in terms of "the AI provider", so the requirements
+   themselves commit to no vendor. The concrete names appear only in Clarifications and
+   Assumptions, which is where recorded decisions and pre-existing environmental constraints
+   belong. Had a vendor name leaked into an FR, this item would fail. It is now the closest item
+   to failing and should be re-checked on any further AI-related change.
+
+7. *Scope is clearly bounded* — adding AI configuration to a "no functionality" feature is exactly
+   the kind of creep that erodes a boundary. Resolved by amending FR-016 itself to state
+   explicitly why configuration binding and an on-demand credential check are not PoC behaviour
+   (nothing is processed, stored, or answered), rather than leaving the exception implicit.
+
+**Blocking dependency introduced**: the spec now assumes the constitution is amended from OpenAI
+to Azure OpenAI *before* implementation. Until that amendment lands, the spec and the constitution
+disagree, and Principle I is violated by proceeding.
+
+**Downstream staleness**: `plan.md`, `research.md`, `contracts/` and `quickstart.md` were produced
+before these clarifications and now contradict the spec — research Decision 2 in particular says
+Spring AI must not be added to this feature. They require regeneration via `/speckit-plan`.
+
+## Notes
+
+- Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`

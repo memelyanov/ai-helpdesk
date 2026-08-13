@@ -25,10 +25,10 @@ becomes an interruption.
 Retrieval-Augmented Generation (RAG). The user stops searching for *a document* and starts asking
 for *an answer*.
 
-**Ingest** — document → parse (Apache Tika) → chunk → OpenAI embeddings → vector database.
+**Ingest** — document → parse (Apache Tika) → chunk → Azure OpenAI embeddings → vector database.
 
-**Ask** — question → embedding → vector similarity search → top-K chunks → OpenAI chat model →
-answer + source citations.
+**Ask** — question → embedding → vector similarity search → top-K chunks → Azure OpenAI chat
+model → answer + source citations.
 
 Matching happens on *meaning* rather than exact words, and every answer is traceable back to the
 document it came from. When retrieval finds nothing relevant, the assistant says so rather than
@@ -40,7 +40,7 @@ inventing an answer.
 |---|---|
 | Language / runtime | Java 17, Spring Boot 3 |
 | RAG orchestration | Spring AI (alt: LangChain4j) |
-| LLM & embeddings | OpenAI — `gpt-4o-mini`, `text-embedding-3-small` |
+| LLM & embeddings | Azure OpenAI — a chat deployment (`gpt-4o-mini` class) and a separate embedding deployment (`text-embedding-3-small`) |
 | Vector database | pgvector on PostgreSQL (alt: Chroma / Qdrant) |
 | Document parsing | Apache Tika |
 | API | Spring Web REST — `POST /documents`, `POST /chat` |

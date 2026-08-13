@@ -5,6 +5,12 @@
 **Author:** Michael Emelyanov
 **Discipline:** Java
 
+> **Amended 2026-08-13** — the mandated inference provider changed from the public OpenAI API to
+> **Azure OpenAI**, ratified in constitution v1.3.0. Models are unchanged; they are now addressed
+> by Azure *deployment name* rather than model name, and chat and embeddings require two separate
+> deployments. §8 is left as written: it records the outline of the Week 1 concept session as it
+> was delivered, and `docs/demo-deck.html` still reflects that original version.
+
 ---
 
 ## 1. Problem Statement
@@ -28,7 +34,7 @@ The concept rests on three capabilities:
 
 1. **Upload documents to a vector database** — ingest `.txt` / `.pdf` files, split them into chunks, convert each chunk into an embedding vector, and store it.
 2. **RAG search over the vector database** — turn the user's question into an embedding and retrieve the semantically closest chunks, matching on *meaning* rather than exact words.
-3. **Use an OpenAI LLM to answer** — pass the retrieved chunks to the model as context so it produces a direct, readable answer **with a citation of the source document**.
+3. **Use an Azure OpenAI LLM to answer** — pass the retrieved chunks to the model as context so it produces a direct, readable answer **with a citation of the source document**.
 
 The key shift: the user stops searching for *a document* and starts asking for *an answer*.
 
@@ -44,7 +50,7 @@ The key shift: the user stops searching for *a document* and starts asking for *
 > **System:**
 > 1. Embeds the question.
 > 2. Retrieves the top-K most similar chunks — three of them come from `travel-expense-policy.pdf`, one from `corporate-card-rules.txt`.
-> 3. Sends question + chunks to the OpenAI LLM with an instruction to answer *only* from the provided context.
+> 3. Sends question + chunks to the Azure OpenAI LLM with an instruction to answer *only* from the provided context.
 >
 > **Answer:** "Yes. Ground transportation between the airport and your hotel or office is reimbursable for approved business travel. Submit the receipt within 30 days of return. Rides above €80 require manager pre-approval.
 > *Sources: travel-expense-policy.pdf (p. 5), corporate-card-rules.txt*"
@@ -72,7 +78,7 @@ The user got the answer in one turn, plus a link to verify it. No keyword guessi
 | Upload | User uploads `.txt` / `.pdf` via REST endpoint |
 | Parse | Text extracted (Apache Tika handles both formats) |
 | Chunk | Split into ~500–1000 token chunks with overlap, to keep each chunk semantically self-contained |
-| Embed | Each chunk → vector via **OpenAI embeddings** (`text-embedding-3-small`) |
+| Embed | Each chunk → vector via the **Azure OpenAI embedding deployment** (`text-embedding-3-small`) |
 | Store | Vector + text + metadata (`filename`, `page`, `chunk_id`) written to the vector database |
 
 ### 5.2 Query pipeline (online)
@@ -80,10 +86,10 @@ The user got the answer in one turn, plus a link to verify it. No keyword guessi
 | Step | What happens |
 |---|---|
 | Ask | User submits a natural-language question |
-| Embed query | Question → vector via the same OpenAI embedding model |
+| Embed query | Question → vector via the same Azure OpenAI embedding deployment used at ingestion |
 | Retrieve | Vector similarity search returns top-K (K ≈ 4–6) nearest chunks |
 | Augment | Chunks assembled into a prompt with a system instruction: *answer strictly from the context; if not present, say so; always cite the source* |
-| Generate | **OpenAI chat model** (`gpt-4o-mini` for the PoC) produces the answer |
+| Generate | The **Azure OpenAI chat deployment** (`gpt-4o-mini` class for the PoC) produces the answer |
 | Return | Answer + list of source documents returned to the chat UI |
 
 ### 5.3 Why RAG rather than fine-tuning
@@ -105,7 +111,7 @@ The user got the answer in one turn, plus a link to verify it. No keyword guessi
 |---|---|---|
 | Language / runtime | **Java 17, Spring Boot 3** | Matches the Java discipline track and the course examples |
 | RAG orchestration | **Spring AI** (alt: LangChain4j) | Native Spring integration for embeddings, vector stores and chat models |
-| LLM & embeddings | **OpenAI** — `gpt-4o-mini` (chat), `text-embedding-3-small` (embeddings) | Strong quality/cost ratio; well supported in Spring AI |
+| LLM & embeddings | **Azure OpenAI** — chat deployment (`gpt-4o-mini` class), separate embedding deployment (`text-embedding-3-small`) | Same quality/cost profile as the public API, plus tenant-scoped data handling and credentials the team already holds |
 | Vector database | **pgvector** on PostgreSQL (alt: Chroma / Qdrant) | One database for vectors and metadata; trivial to run in Docker |
 | Document parsing | **Apache Tika** | Handles `.pdf` and `.txt` behind one API |
 | API | Spring Web REST — `POST /documents`, `POST /chat` | Minimal surface, consumed by the Angular frontend |
@@ -114,7 +120,7 @@ The user got the answer in one turn, plus a link to verify it. No keyword guessi
 
 ### 6.3 Integrations
 
-- **OpenAI API** — embeddings + chat completions (API key via environment variable, never committed).
+- **Azure OpenAI** — embeddings + chat completions, addressed by deployment name rather than model name. Key, endpoint and both deployment names come from environment variables and are never committed.
 - **PostgreSQL + pgvector** — vector store, run via Docker Compose.
 - **Local filesystem / upload endpoint** — document source for the PoC. A future step could point ingestion at Confluence or SharePoint instead.
 
@@ -155,7 +161,7 @@ The PoC is considered successful when:
 **In scope**
 - Document upload (`.txt`, `.pdf`) and indexing into the vector database
 - Semantic retrieval over the indexed corpus
-- Grounded answer generation via OpenAI with source citations
+- Grounded answer generation via Azure OpenAI with source citations
 - Angular 21 frontend: chat view and document upload view
 - Small evaluation set to measure retrieval quality
 
@@ -170,8 +176,8 @@ The PoC is considered successful when:
 
 1. ~~Assemble the synthetic document corpus and the evaluation CSV.~~ **Done** — see `sample-data/`.
 2. Start pgvector in Docker; scaffold the Spring Boot application locally against it.
-3. Implement the ingestion endpoint (Tika → chunking → OpenAI embeddings → pgvector).
-4. Implement the chat endpoint (retrieve → augment → OpenAI chat completion → answer + sources).
+3. Implement the ingestion endpoint (Tika → chunking → Azure OpenAI embeddings → pgvector).
+4. Implement the chat endpoint (retrieve → augment → Azure OpenAI chat completion → answer + sources).
 5. Build the Angular 21 frontend — chat view and upload view against the REST API.
 6. Run the evaluation set, tune chunk size and K.
 7. Present at the weekly update.
