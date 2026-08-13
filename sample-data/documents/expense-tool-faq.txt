@@ -1,0 +1,115 @@
+NORTHWIND SYSTEMS GMBH
+EXPENSE TOOL - FREQUENTLY ASKED QUESTIONS
+
+Document ID: FIN-TOOL-001
+Version: 2.1
+Effective date: 20 January 2026
+Owner: Finance Operations
+Classification: Internal
+
+
+This document explains how to operate the expense tool. It does not set policy.
+What may be claimed, and within what limits, is determined by the business
+travel and expense reimbursement policy and by the corporate credit card rules.
+If this FAQ appears to contradict either of those, they win.
+
+
+HOW DO I GET INTO THE TOOL?
+
+Through single sign-on, from the "Expenses" tile on the intranet home page.
+There is no separate password. If the tile is missing, your account has not
+been enrolled yet -- raise a P4 ticket with the IT service desk.
+
+
+WHAT IS A REPORT AND WHY DO I NEED ONE?
+
+Individual expense lines are grouped into a report, and reports are what
+managers approve. A report should cover one trip or one calendar month of
+ad-hoc costs. Mixing several trips into one report makes approval slower
+because the approver has to reconstruct which cost belongs to which purpose.
+
+
+HOW DO I ADD A RECEIPT?
+
+Three ways:
+
+  - Photograph it in the mobile app. Optical character recognition fills in the
+    date, merchant and amount, which you then check.
+  - Forward the merchant's e-mail receipt to receipts@northwind.example. It
+    arrives in your inbox inside the tool within a few minutes.
+  - Upload a PDF or image directly to the expense line in the web interface.
+
+Accepted formats are PDF, JPG, PNG and HEIC. The maximum file size is 10 MB per
+attachment.
+
+
+THE CARD TRANSACTION IS THERE BUT I HAVE NO RECEIPT YET. WHAT NOW?
+
+Leave the transaction unsubmitted and attach the receipt when you have it. Do
+not submit the line with a note promising the receipt later -- Finance will
+reject it and the line returns to your inbox.
+
+
+WHY DOES MY REPORT SAY "MISSING BUSINESS PURPOSE"?
+
+Every line needs a purpose in plain language: who, what and why. "Client
+lunch" is not enough. "Lunch with A. Weber and M. Frank, Contoso, discussing
+the Q2 renewal" is.
+
+For hospitality, the names and employers of everyone present are required.
+
+
+HOW DO I SPLIT ONE TRANSACTION ACROSS TWO COST CENTRES?
+
+Open the line, choose "Itemise", and add a row per cost centre with its amount.
+The rows must sum to the transaction total or the line will not submit.
+
+
+WHAT CURRENCY SHOULD I ENTER?
+
+Enter the amount exactly as it appears on the receipt, in the receipt's own
+currency. The tool converts using the card issuer's settlement rate for card
+transactions, or the European Central Bank reference rate on the transaction
+date for cash. Do not convert manually; a manually converted amount will not
+reconcile.
+
+
+WHO APPROVES MY REPORT?
+
+Your line manager by default. If the report contains a line above the delegated
+limit for your grade, the tool adds the department head as a second approver
+automatically. You do not need to request this.
+
+
+HOW LONG DOES REIMBURSEMENT TAKE?
+
+Approved out-of-pocket claims are paid in the next payment run. Runs are
+weekly, on Wednesdays, with a cut-off of Monday 12:00 CET. Card transactions
+are settled directly with the issuer and are not paid to you.
+
+
+MY REPORT WAS REJECTED. WHAT HAPPENS?
+
+It returns to your inbox with the approver's comment. Fix the issue and
+resubmit; the approval history is preserved. Rejection is not a disciplinary
+step.
+
+
+I LEFT A REPORT UNSUBMITTED FOR A LONG TIME. IS THAT A PROBLEM?
+
+Yes. The tool sends reminders at 14, 30 and 45 days after the transaction date.
+Deadlines and the consequences of missing them are set by the travel and
+expense policy and the corporate card rules, not by this tool.
+
+
+CAN I DELEGATE MY EXPENSES TO AN ASSISTANT?
+
+Yes. Under Settings, "Delegates", you can grant another employee permission to
+prepare and submit reports on your behalf. Approval rights cannot be delegated
+this way; approval delegation is configured by Finance Operations.
+
+
+WHO DO I ASK IF SOMETHING IS BROKEN?
+
+Tool faults go to the IT service desk. Questions about whether something is
+claimable go to Finance Operations.

@@ -1,0 +1,124 @@
+NORTHWIND SYSTEMS GMBH
+FACILITIES AND OFFICE GUIDE
+
+Document ID: FAC-GEN-001
+Version: 4.0
+Effective date: 8 January 2026
+Owner: Facilities Management
+Classification: Internal
+
+
+1. SITES
+
+  Munich (headquarters)   Leonrodstrasse 118, four floors, approximately 260
+                          desks, main reception on the ground floor.
+  Hamburg                 Grosse Elbstrasse 42, one floor, approximately 60
+                          desks, reception shared with the building.
+  Krakow                  ul. Pawia 9, two floors, approximately 90 desks.
+
+Reception at every site is staffed from 08:30 to 17:30 on business days.
+
+
+2. BUILDING ACCESS
+
+Entry is by access badge at all sites. The badge also operates the internal
+floor doors and the bicycle store.
+
+Standard access hours are 06:00 to 22:00, Monday to Sunday. Outside these
+hours the badge readers are disabled and entry requires prior arrangement with
+Facilities Management, made at least one business day in advance.
+
+Badges are issued by the IT service desk together with the notebook during
+onboarding. Access rights are set by the line manager's request and reviewed
+quarterly. The procedure for a lost badge is set out in the information
+security policy.
+
+Do not hold doors open for people you do not recognise, including people
+carrying deliveries. Anyone without a badge is a visitor and must be signed in
+at reception.
+
+
+3. VISITORS
+
+Visitors are registered in advance through the visitor booking form on the
+intranet, with name, employer and expected arrival time. Reception issues a
+visitor pass on arrival against photo identification.
+
+Visitors are accompanied at all times by their host and may not be left alone
+in working areas. The host returns the pass to reception on departure.
+
+Visitor parking is available at the front entrance of the Munich and Krakow
+sites. Spaces are requested through reception when the visit is registered.
+
+
+4. MEETING ROOMS
+
+Rooms are booked in the calendar system. Room names are shown on the door
+panel, which also allows an ad-hoc booking if the room is free.
+
+  - A booking not checked in on the door panel within ten minutes is released.
+  - Rooms seating twelve or more may not be booked as a recurring series
+    without Facilities Management approval.
+  - Two rooms per site are designated quiet rooms for confidential calls and
+    cannot be booked in advance.
+
+Leave rooms as you found them: whiteboards cleared, chairs replaced, no cups.
+
+
+5. DESKS
+
+All desks are unassigned and are booked through the desk booking tool, which
+opens fourteen days ahead. A booking not checked in by 11:00 is released.
+
+Personal belongings are not left on desks overnight. Lockers are available on
+each floor and are allocated through Facilities Management.
+
+
+6. KITCHENS AND CATERING
+
+Kitchens on each floor provide coffee, tea, filtered water and refrigeration.
+The Munich site has a staffed canteen on the ground floor, open 11:30 to 14:00
+on business days, subsidised at 40 percent.
+
+Label anything you put in a refrigerator. Refrigerators are emptied every
+Friday at 17:00 and unlabelled items are discarded.
+
+
+7. BICYCLES AND SHOWERS
+
+Covered bicycle storage is available at all three sites, accessed by badge.
+Munich and Krakow have shower facilities on the ground floor.
+
+
+8. DELIVERIES AND POST
+
+Personal deliveries to any Northwind site are not accepted. Business
+deliveries are received at the goods entrance and are notified to the
+addressee by e-mail.
+
+
+9. FAULTS AND REQUESTS
+
+Report a facilities fault -- heating, lighting, plumbing, furniture, door
+hardware -- through the facilities request form on the intranet. Faults
+affecting safety or security are reported by telephone to extension 4100
+immediately and are attended to the same day.
+
+IT equipment faults go to the IT service desk, not to Facilities Management.
+
+
+10. FIRE AND EVACUATION
+
+Evacuation routes are posted on every floor. Assembly points are marked
+outside each building. Drills are held twice a year. On hearing the alarm,
+leave by the nearest marked route and do not use the lifts.
+
+Floor wardens are identified by the yellow markings on their badge holders and
+direct the evacuation on their floor.
+
+
+11. RELATED DOCUMENTS
+
+  - Information security policy
+  - IT service desk handbook
+  - Flexible and distributed working policy

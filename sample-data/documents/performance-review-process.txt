@@ -1,0 +1,128 @@
+NORTHWIND SYSTEMS GMBH
+PERFORMANCE REVIEW PROCESS
+
+Document ID: HR-PRF-005
+Version: 3.3
+Effective date: 15 January 2026
+Owner: People Operations
+Classification: Internal
+Review cycle: Annual
+
+
+1. PURPOSE
+
+This document describes how contribution and development are assessed at
+Northwind Systems: the cadence, the inputs, the calibration step, and how the
+outcome connects to compensation and promotion.
+
+It applies to all employees who have completed at least one full cycle. New
+joiners inside their first cycle are assessed against their 30-day and 90-day
+orientation objectives instead, as described in the new joiner orientation
+guide.
+
+
+2. CADENCE
+
+There are two review cycles per calendar year.
+
+  - The mid-year cycle runs from 1 June to 15 July.
+  - The end-of-year cycle runs from 15 November to 31 January.
+
+The end-of-year cycle is the one that carries compensation and promotion
+decisions. The mid-year cycle is developmental: it produces feedback and an
+adjusted objective set, but no rating that affects pay.
+
+Objectives are agreed at the start of the calendar year and revisited at the
+mid-year point. Objectives that have been overtaken by a change in priorities
+are rewritten rather than marked as missed.
+
+
+3. INPUTS TO THE ASSESSMENT
+
+Each cycle draws on three inputs. All three are required; a cycle cannot be
+closed with any of them missing.
+
+3.1 Self-assessment
+
+The employee writes a summary of their contribution over the period against
+each agreed objective, with concrete evidence, plus a short reflection on what
+they want to develop next. This is submitted first, before the manager writes
+anything, so that the manager's view is informed by it.
+
+3.2 Manager assessment
+
+The line manager writes an assessment against the same objectives, drawing on
+their own observation, the self-assessment and the peer input. The manager is
+expected to distinguish between the result achieved and the way it was
+achieved; both count.
+
+3.3 Peer feedback
+
+Feedback is collected from a minimum of two colleagues who have worked with the
+employee during the period. The employee nominates candidates; the line manager
+may add further names to ensure the sample is representative, and confirms the
+final list.
+
+Peer feedback is shared with the employee in summarised form. Individual
+attribution is not disclosed unless the contributor agrees to it.
+
+
+4. CALIBRATION
+
+Before outcomes are communicated, line managers within a department meet to
+calibrate. The purpose is consistency: the same contribution should produce the
+same outcome regardless of which manager wrote the assessment.
+
+Calibration may adjust an outcome. Where it does, the line manager explains the
+adjustment and its reasoning to the employee directly -- calibration is never
+presented as an anonymous decision from elsewhere.
+
+There is no forced distribution. Managers are not required to place a fixed
+percentage of their team into any outcome band.
+
+
+5. OUTCOME BANDS
+
+  - Exceptional        Contribution well beyond the agreed scope, sustained
+                       across the period.
+  - Strong             Objectives met, with clear evidence of impact.
+  - Solid              Objectives substantially met. This is the expected
+                       outcome for most employees in most cycles.
+  - Developing         Some objectives not met, or the way of working needs
+                       attention. Triggers a written development plan.
+  - Not meeting        Sustained shortfall. Triggers a formal improvement plan
+                       with People Operations involved.
+
+
+6. CONNECTION TO COMPENSATION AND PROMOTION
+
+Salary review takes place once a year and is decided in the end-of-year cycle,
+with any change effective from 1 April.
+
+Promotion is a separate decision from the rating. It is proposed by the line
+manager, evidenced against the target level in the career framework, and
+confirmed at department level during calibration. A strong rating does not by
+itself imply promotion, and promotion is possible from any band above
+Developing.
+
+
+7. DISAGREEMENT
+
+An employee who disagrees with an outcome should first raise it with their line
+manager. If it remains unresolved, they may ask People Operations to review the
+process that was followed. The review examines whether the process was applied
+correctly; it does not re-perform the assessment.
+
+
+8. RECORDS
+
+Completed assessments are retained for the period set out in the data
+retention schedule and are accessible to the employee, their line manager and
+People Operations.
+
+
+9. RELATED DOCUMENTS
+
+  - New joiner orientation guide
+  - Learning and development policy
+  - Data retention schedule

@@ -1,0 +1,113 @@
+NORTHWIND SYSTEMS GMBH
+FLEXIBLE AND DISTRIBUTED WORKING POLICY
+
+Document ID: HR-FLX-007
+Version: 2.4
+Effective date: 1 March 2026
+Owner: People Operations
+Classification: Internal
+Review cycle: Annual
+
+
+1. PURPOSE AND PRINCIPLE
+
+Northwind Systems operates a hybrid working model. The principle is that
+focused individual work is done wherever the employee is most effective, while
+collaboration, mentoring and team decision-making benefit from shared physical
+presence.
+
+This policy sets out the baseline expectation, the exception process, and the
+obligations that apply wherever an employee works from.
+
+
+2. BASELINE EXPECTATION
+
+Hybrid is the default arrangement for all office-based roles.
+
+Employees are expected to be present at their assigned site for a minimum of
+two days per week. The specific days are agreed within the team, not assigned
+centrally, and teams are encouraged to align on shared anchor days so that the
+office days actually overlap.
+
+The two-day minimum is measured as a weekly average over a calendar month, so
+that travel, training and leave in a given week do not create a breach.
+
+Roles that are inherently site-bound -- facilities, reception, hardware
+logistics, laboratory work -- are excluded from the hybrid model and are
+specified in the employee's contract.
+
+
+3. FULLY DISTRIBUTED ARRANGEMENTS
+
+An arrangement in which an employee does not attend a Northwind site at all is
+treated as an exception to this policy. It is not available on request as a
+standing entitlement.
+
+An exception requires:
+
+  - A written case from the employee describing the arrangement and its
+    duration.
+  - Support from the line manager, including confirmation that the role can be
+    performed with no on-site presence and that the team's collaboration
+    pattern accommodates it.
+  - Approval by the department head. This approval cannot be delegated.
+  - A review date, at most twelve months out, at which the arrangement is
+    either renewed or ended.
+
+Approved exceptions are recorded by People Operations. An arrangement agreed
+informally within a team, without department head approval, has no standing and
+will be corrected at the next review.
+
+
+4. WORKING FROM ANOTHER COUNTRY
+
+Working from a country other than the one in the employment contract creates
+tax, social security and permanent establishment obligations for the company.
+It therefore requires approval from both the department head and Finance,
+regardless of duration.
+
+Short stays of up to twenty working days per calendar year within the European
+Union may be approved by the department head alone, with notification to
+Finance. Anything longer, or anywhere outside the European Union, requires the
+full approval path and a minimum of six weeks' notice.
+
+
+5. OBLIGATIONS THAT APPLY OFF-SITE
+
+The location of work does not change any other obligation. In particular:
+
+  - Core availability. Employees are reachable during the team's agreed core
+    hours and keep their calendar accurate.
+  - Equipment. Company work is performed on company-managed devices only.
+    Personal machines are not permitted for company work, whatever the
+    location.
+  - Network. Public wireless networks may be used only with the corporate VPN
+    active.
+  - Confidentiality. Screens must not be visible to people outside the
+    company, and calls covering confidential material must not be taken in
+    public spaces.
+  - Storage. The information security policy applies unchanged. Company data
+    stays in approved corporate storage.
+
+6. HOME WORKSTATION
+
+Employees working off-site regularly may request a second docking station,
+display and input devices through the IT service desk equipment request
+process. Furniture is not provided. An annual home workstation allowance of
+EUR 250 is available and is claimed through the expense tool under the
+category "home office equipment".
+
+
+7. OFFICE SPACE
+
+Desks at all sites are unassigned and booked through the desk booking tool.
+Bookings open fourteen days ahead. A booking that is not checked in by 11:00 is
+released automatically.
+
+
+8. RELATED DOCUMENTS
+
+  - Information security policy
+  - IT service desk handbook
+  - Facilities and office guide
+  - Business travel and expense reimbursement policy

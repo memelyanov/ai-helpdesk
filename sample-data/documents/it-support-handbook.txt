@@ -1,0 +1,155 @@
+NORTHWIND SYSTEMS GMBH
+IT SERVICE DESK HANDBOOK
+
+Document ID: IT-SVC-011
+Version: 6.3
+Effective date: 2 February 2026
+Owner: IT Operations
+Classification: Internal
+Review cycle: Semi-annual
+
+
+1. SCOPE
+
+This handbook describes how to reach the IT service desk, how requests are
+prioritised, what response targets apply, and how equipment is provisioned and
+replaced. It covers all Northwind sites and all company-managed endpoints.
+
+It does not cover product infrastructure or customer-facing incidents. Those
+follow the incident response plan.
+
+
+2. HOW TO REACH THE SERVICE DESK
+
+All work must enter through a ticket. Tickets are the only supported channel,
+because they carry the audit trail, the asset reference and the approval
+record.
+
+  - Self-service portal: the "IT Service Desk" tile on the intranet home page.
+    This is the preferred route and covers every request type in section 5.
+  - Telephone: extension 4400, staffed 08:00-18:00 CET on business days. Used
+    for P1 situations or when the portal itself is unreachable.
+  - Walk-up desk: ground floor, 09:00-16:00 on business days.
+
+Requests sent by direct message or personal e-mail to an IT colleague will be
+redirected to the portal and will not carry a response target.
+
+
+3. PRIORITY CLASSIFICATION
+
+Priority is assigned by the service desk on intake, based on business impact
+and the number of people affected. Requesters may state an urgency, but they
+do not set the priority.
+
+  P1 - Critical
+      A whole site, a whole department or a business-critical shared service is
+      unable to work. Examples: site-wide network outage, single sign-on
+      unavailable, payroll system inaccessible on a pay run day.
+
+  P2 - High
+      An individual is unable to perform their role and no workaround exists.
+      Examples: notebook or workstation hardware fault, forgotten credentials
+      with no self-service reset available, mailbox inaccessible.
+
+  P3 - Medium
+      An individual is impaired but can still work using a workaround.
+      Examples: intermittent peripheral fault, degraded performance, a
+      secondary application failing.
+
+  P4 - Low
+      Requests, questions and improvements with no current work stoppage.
+      Examples: new equipment requests, software installation, access changes.
+
+
+4. RESPONSE AND RESOLUTION TARGETS
+
+The acknowledgement target is the time within which a named engineer picks the
+ticket up and makes first contact with the requester. It is measured from
+ticket creation, not from the moment the requester started having trouble.
+
+  Priority   Acknowledgement          Target resolution
+  --------   ----------------------   ---------------------------
+  P1         Within 1 hour            Within 4 hours
+  P2         Within 4 business hours  Within 1 business day
+  P3         Within 1 business day    Within 3 business days
+  P4         Within 2 business days   Within 10 business days
+
+Business hours are 08:00-18:00 CET, Monday to Friday, excluding public holidays
+at the site where the requester is based. P1 acknowledgement is measured around
+the clock and is not limited to business hours.
+
+Where a target is going to be missed, the service desk notifies the requester
+before the target expires, with a revised estimate and the reason.
+
+
+5. EQUIPMENT
+
+5.1 Standard issue
+
+Every employee receives a notebook, a docking station, one external display, a
+keyboard and a mouse. This set is issued at the IT service desk during
+onboarding and is refreshed on a four-year cycle.
+
+5.2 Additional peripherals
+
+To obtain equipment beyond the standard issue -- an additional display, a
+headset, an ergonomic keyboard, a second docking station for a home working
+location -- submit an equipment request through the IT service desk portal.
+
+Requests for items on the standard peripherals catalogue are approved by your
+line manager and require no further sign-off. The catalogue covers displays,
+input devices, headsets, webcams, cable adapters and laptop stands. Delivery is
+typically three to five business days from approval.
+
+Anything not on the catalogue, and any single item above EUR 400, additionally
+requires department head approval and is reviewed by IT Operations for
+compatibility and support cost before it is ordered.
+
+5.3 Faults and replacement
+
+Notebook and workstation hardware faults are handled as P2. Raise a ticket in
+the IT service desk portal describing the symptom and the asset tag printed on
+the underside of the device.
+
+If the fault prevents you from working and cannot be resolved remotely, the
+service desk issues a replacement unit on the next business day. Your profile
+and any data synchronised to corporate storage are restored onto the
+replacement; anything held only on the local disk and never synchronised
+cannot be recovered.
+
+Damaged, lost or stolen equipment must be reported the same day. Loss or theft
+additionally requires a report to the security team.
+
+5.4 Returns
+
+Equipment is returned to the IT service desk on the last working day. The
+service desk confirms the return in the asset register and releases the final
+clearance to People Operations.
+
+
+6. SOFTWARE
+
+Applications on the approved catalogue can be installed from the self-service
+software portal without a ticket. Anything else requires a P4 request and is
+assessed for licensing, security and support implications. Employees do not
+hold local administrator rights on company-managed endpoints.
+
+
+7. ACCOUNTS AND ACCESS
+
+Password resets are self-service through the identity portal using a registered
+second factor. If no second factor is registered, or the registered device is
+unavailable, a P2 ticket is required and identity is verified by video call
+with the service desk.
+
+Access to a shared system or a restricted repository is requested through the
+portal and approved by the system owner, not by IT. Credential rules are set by
+the information security policy.
+
+
+8. RELATED DOCUMENTS
+
+  - Information security policy
+  - Incident response plan
+  - New joiner orientation guide
+  - Facilities and office guide

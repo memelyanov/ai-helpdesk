@@ -1,0 +1,126 @@
+NORTHWIND SYSTEMS GMBH
+CORPORATE CREDIT CARD RULES
+
+Document ID: FIN-CRD-003
+Version: 5.0
+Effective date: 12 January 2026
+Owner: Finance Operations
+Classification: Internal
+Review cycle: Annual
+
+
+1. PURPOSE
+
+These rules govern the issue and use of the Northwind corporate credit card.
+They sit alongside the business travel and expense reimbursement policy, which
+determines what is and is not a claimable expense. This document determines how
+the card itself may be used.
+
+Where the two documents differ on whether a cost is allowable, the travel and
+expense policy takes precedence.
+
+
+2. ELIGIBILITY AND ISSUE
+
+A corporate card is issued to employees who travel on company business at least
+four times a year, to employees who hold a delegated purchasing authority, and
+to team leads who host customers or candidates.
+
+Applications are submitted through Finance Operations and require line manager
+approval. The card is issued in the employee's name, is not transferable, and
+remains the property of Northwind Systems.
+
+The standard monthly limit is EUR 5000. A higher limit requires department head
+approval and is reviewed annually.
+
+
+3. PERMITTED USE
+
+The card is for business expenditure only. Permitted categories are:
+
+  - Transport and accommodation booked for approved business travel.
+  - Meals during business travel, within the limits in the travel policy.
+  - Customer, candidate and supplier hospitality.
+  - Conference and event registration fees that have been approved under the
+    learning and development policy.
+  - Small operational purchases within a delegated purchasing authority.
+
+4. PROHIBITED USE
+
+The card must not be used for:
+
+  - Cash advances or cash withdrawals of any kind.
+  - Personal purchases, including purchases the holder intends to repay.
+  - Any expenditure for the personal benefit of the cardholder or their family.
+  - Political donations.
+  - Purchases that circumvent the procurement process, including splitting a
+    single purchase into several transactions to stay under an approval limit.
+
+Repeated prohibited use leads to withdrawal of the card and may be treated as a
+disciplinary matter.
+
+
+5. RECEIPTS
+
+An itemised receipt is required for every transaction, without exception and
+regardless of value. A card statement line is not a receipt: it shows the total
+but not what was bought, and Finance cannot substantiate it for tax purposes.
+
+Where a merchant issues only a summary total, the cardholder must obtain an
+itemised version or attach a written explanation of what was purchased and for
+whom.
+
+Receipts are attached to the matching transaction in the expense tool. The
+tool imports card transactions automatically within two business days of
+settlement; the cardholder's task is to match, categorise and substantiate
+each one.
+
+Transactions with no receipt attached after sixty days are recovered through
+payroll.
+
+
+6. ACCIDENTAL PERSONAL USE
+
+Occasional accidental personal use -- most often the wrong card taken out of a
+wallet -- is not treated as misconduct if it is declared promptly.
+
+The cardholder must flag the transaction in the expense tool as personal and
+repay the amount to the company within fourteen days of the transaction date.
+Repayment is made by bank transfer to the account shown on the expense tool's
+repayment page, quoting the transaction reference.
+
+Amounts not repaid within fourteen days are deducted from the next available
+salary payment.
+
+
+7. AIRPORT AND GROUND TRANSPORT
+
+Ground transport taken during approved business travel may be charged to the
+card. The pre-approval threshold in the travel and expense policy still
+applies: a single journey above EUR 80 needs manager approval in advance, and
+paying by card does not waive that requirement.
+
+
+8. LOSS, THEFT AND DISPUTED TRANSACTIONS
+
+Report a lost or stolen card to the card issuer immediately using the number
+printed on the statement, and to Finance Operations the same business day.
+
+Disputed or unrecognised transactions must be raised with Finance Operations
+within thirty days of the statement date, after which the issuer will no longer
+accept a chargeback.
+
+
+9. LEAVING THE COMPANY
+
+The card is surrendered to Finance Operations on the last working day. All
+outstanding transactions must be substantiated and any personal amounts repaid
+before final clearance is issued.
+
+
+10. RELATED DOCUMENTS
+
+  - Business travel and expense reimbursement policy
+  - Expense tool frequently asked questions
+  - Learning and development policy
+  - Code of conduct

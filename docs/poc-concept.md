@@ -47,7 +47,7 @@ The key shift: the user stops searching for *a document* and starts asking for *
 > 3. Sends question + chunks to the OpenAI LLM with an instruction to answer *only* from the provided context.
 >
 > **Answer:** "Yes. Ground transportation between the airport and your hotel or office is reimbursable for approved business travel. Submit the receipt within 30 days of return. Rides above €80 require manager pre-approval.
-> *Sources: travel-expense-policy.pdf (p. 4), corporate-card-rules.txt*"
+> *Sources: travel-expense-policy.pdf (p. 5), corporate-card-rules.txt*"
 
 The user got the answer in one turn, plus a link to verify it. No keyword guessing, no colleague interrupted.
 
@@ -96,8 +96,8 @@ The user got the answer in one turn, plus a link to verify it. No keyword guessi
 
 ### 6.1 Data inputs
 
-- **Corpus:** 15–30 internal-style documents (`.txt`, `.pdf`) covering onboarding, expenses, security, vacation, release process, IT support. Synthetic/anonymised for the PoC — no real confidential data.
-- **Evaluation set:** a CSV of test questions, each paired with the document that *should* be retrieved and the expected answer (see [`sample-data/evaluation-questions.csv`](../sample-data/evaluation-questions.csv)). Questions deliberately avoid the documents' own wording, so the test proves semantic search rather than keyword luck.
+- **Corpus:** 16 internal-style documents (7 `.txt`, 9 `.pdf`, ~107k characters) covering onboarding, expenses, security, vacation, release process, IT support, benefits, conduct and facilities — see [`sample-data/documents/`](../sample-data/documents/). Entirely synthetic: a fictional company, no real confidential data. Five of the sixteen are distractors that answer no evaluation question, so retrieval has a plausible wrong answer available.
+- **Evaluation set:** a CSV of test questions, each paired with the document that *should* be retrieved and the expected answer (see [`sample-data/evaluation-questions.csv`](../sample-data/evaluation-questions.csv)). Questions deliberately avoid the documents' own wording, so the test proves semantic search rather than keyword luck. [`sample-data/README.md`](../sample-data/README.md) sets out the question-to-document vocabulary gaps.
 
 ### 6.2 Proposed tech stack
 
@@ -168,7 +168,7 @@ The PoC is considered successful when:
 
 ## 10. Next Steps
 
-1. Assemble the synthetic document corpus and the evaluation CSV.
+1. ~~Assemble the synthetic document corpus and the evaluation CSV.~~ **Done** — see `sample-data/`.
 2. Start pgvector in Docker; scaffold the Spring Boot application locally against it.
 3. Implement the ingestion endpoint (Tika → chunking → OpenAI embeddings → pgvector).
 4. Implement the chat endpoint (retrieve → augment → OpenAI chat completion → answer + sources).

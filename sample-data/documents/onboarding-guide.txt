@@ -1,0 +1,134 @@
+NORTHWIND SYSTEMS GMBH
+NEW JOINER ORIENTATION GUIDE
+
+Document ID: HR-ONB-002
+Version: 4.1
+Effective date: 5 January 2026
+Owner: People Operations
+Classification: Internal
+Review cycle: Annual
+
+
+1. PURPOSE
+
+This guide describes what an incoming employee should expect during their
+initial weeks at Northwind Systems, and what the receiving team is expected to
+prepare in advance. It applies to permanent staff, fixed-term staff and
+long-term contractors joining any Northwind entity.
+
+Line managers are responsible for completing the preparation steps in section 2
+before the employee's start date. People Operations tracks completion and will
+escalate any outstanding item to the department head.
+
+
+2. PREPARATION BEFORE THE START DATE
+
+The hiring manager must complete the following at least five working days in
+advance:
+
+  - Raise an equipment request so that a notebook, docking station and display
+    are configured and ready for collection.
+  - Request building access rights for the correct site and floor.
+  - Nominate a buddy from within the team (see section 5).
+  - Book the introductory sessions listed in section 6 into the calendar.
+  - Confirm the seating allocation with the office coordinator.
+
+People Operations issues the employment paperwork and payroll enrolment
+separately. Nothing in this guide replaces those formalities.
+
+
+3. ARRIVAL AND EQUIPMENT COLLECTION
+
+Report to the reception desk of your assigned site between 09:00 and 10:00 on
+your start date. Reception will notify your manager and issue a temporary
+visitor pass for the morning.
+
+The following must be completed before you begin any project work. People
+Operations refers to this list as the arrival checklist, and it is tracked in
+the onboarding portal:
+
+  1. Collect your notebook and your permanent access badge from the IT service
+     desk on the ground floor. Both are issued together and require photo
+     identification.
+
+  2. Complete the mandatory information security awareness training. The
+     module takes roughly 45 minutes and is assigned to you automatically on
+     your start date. Network access beyond the guest segment is not enabled
+     until it is finished.
+
+  3. Meet your assigned buddy. Your buddy will walk you through the office,
+     the team's working agreements and the internal tooling landscape.
+
+  4. Set up the accounts listed in the arrival checklist. The standard set is
+     single sign-on, the source control platform, the ticketing system, the
+     internal wiki and the expense tool. Additional accounts depend on the
+     team and are requested by your manager.
+
+Items 1 to 4 are normally finished before lunch. If any of them is blocked,
+tell your manager rather than working around it -- an incomplete checklist is
+the most common cause of access problems in the second week.
+
+
+4. THE FIRST TWO WEEKS
+
+Weeks one and two are deliberately light on delivery commitments. The
+expectation is that you read the team documentation, attend the sessions in
+section 6, and pick up one small, well-scoped piece of work to learn the
+delivery pipeline end to end.
+
+Your manager will agree a set of 30-day objectives with you by the end of week
+one. These are orientation objectives, not performance targets; formal
+performance review cycles are described in the performance review process
+document and do not apply until you have completed a full cycle.
+
+
+5. BUDDY AND MANAGER SUPPORT
+
+Every incoming employee is paired with a designated buddy for their initial 30
+days. The buddy is an experienced colleague from the same team, but never the
+person's line manager. The buddy is the default first point of contact for
+practical, day-to-day questions: how the team works, who owns what, which
+channel to ask in, where a document lives.
+
+The buddy commitment is:
+
+  - A short check-in every day during the first week.
+  - A weekly check-in during weeks two, three and four.
+  - Availability for ad-hoc questions throughout the 30-day period.
+
+In parallel, the line manager holds formal check-ins. These are scheduled at
+the end of week one, the end of week four and the end of week twelve, and they
+cover progress against the 30-day objectives, any blockers, and confirmation of
+the probation outcome.
+
+After the 30-day period the buddy arrangement ends and the line manager becomes
+the single point of contact for support and escalation.
+
+
+6. INTRODUCTORY SESSIONS
+
+The following sessions are booked by the hiring manager and are expected to be
+attended in the first three weeks:
+
+  - Company overview and organisational structure (60 minutes)
+  - Information security in practice (45 minutes)
+  - Engineering delivery model and release gates (90 minutes, engineering only)
+  - Travel, expenses and the corporate card (30 minutes)
+  - Benefits, leave and working arrangements (45 minutes)
+
+
+7. PROBATION
+
+The standard probation period is six months. The outcome is confirmed in the
+week-twelve check-in and again two weeks before the period ends. A probation
+extension requires department head approval and must be communicated in
+writing at least four weeks before the original end date.
+
+
+8. RELATED DOCUMENTS
+
+  - Remote work policy
+  - IT support handbook
+  - Information security policy
+  - Vacation and leave policy
+  - Performance review process

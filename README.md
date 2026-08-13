@@ -4,7 +4,8 @@ An AI helpdesk chatbot that answers natural-language questions about a company's
 documents (`.txt` / `.pdf`), grounded in the documents themselves and citing its sources.
 
 **Status: concept phase.** No application code exists yet — this repository currently holds the
-PoC concept and its evaluation dataset.
+PoC concept, the synthetic document corpus the chatbot will ingest, and the evaluation set it
+will be measured against.
 
 Proof of concept for Jira ticket
 [EPMGDPL-3139](https://jiraeu.epam.com/browse/EPMGDPL-3139) — *[Week 1] Java General Task 2 —
@@ -51,15 +52,26 @@ inventing an answer.
 | Path | Contents |
 |---|---|
 | [`docs/poc-concept.md`](docs/poc-concept.md) | Full PoC concept: problem, scenario, architecture, tooling, risks, success criteria, presentation outline |
-| [`sample-data/evaluation-questions.csv`](sample-data/evaluation-questions.csv) | Evaluation set — 20 questions with expected source documents |
+| [`sample-data/`](sample-data/README.md) | The synthetic corpus, the evaluation set, and the PDF build script |
 | `.specify/` | speckit workflow templates |
 
-## Evaluation data
+## Sample data
+
+There is no real corpus to test against, so the repository carries a synthetic one: 16 documents
+(7 `.txt`, 9 `.pdf`) written as internal process documentation for a fictional company —
+travel and expenses, security, incident response, releases, leave, IT support, onboarding,
+benefits, conduct, facilities. The PDFs are generated from Markdown sources by
+[`sample-data/build-pdfs.py`](sample-data/build-pdfs.py).
 
 `sample-data/evaluation-questions.csv` is built to test the actual claim. Most questions are
 flagged `tests_vocabulary_mismatch=yes` — they deliberately avoid the source document's own
-wording, so a passing score means semantic retrieval works rather than keyword luck. One row is a
-negative test with an empty expected source: the correct behaviour there is refusing to answer.
+wording, so a passing score means semantic retrieval works rather than keyword luck. Five of the
+sixteen documents are distractors that answer no question, so a wrong answer is always available.
+One row is a negative test with an empty expected source: the correct behaviour there is refusing
+to answer.
+
+See [`sample-data/README.md`](sample-data/README.md) for the document list and the
+question-to-document vocabulary gaps.
 
 ## Success criteria
 
