@@ -1,0 +1,21 @@
+id,question,expected_source_document,expected_answer_summary,category,tests_vocabulary_mismatch
+Q01,"Can I get my money back for a taxi from the airport when travelling for work?",travel-expense-policy.pdf,"Ground transport between airport and hotel/office is reimbursable; receipt within 30 days; rides over EUR 80 need manager pre-approval.",expenses,yes
+Q02,"How long do I have to submit receipts after a business trip?",travel-expense-policy.pdf,"Receipts must be submitted within 30 days of returning from the trip.",expenses,no
+Q03,"What do I do on my first day?",onboarding-guide.txt,"Collect laptop and badge from IT, complete the security training, meet your buddy, and set up accounts listed in the onboarding checklist.",onboarding,yes
+Q04,"Who helps a new joiner during the first weeks?",onboarding-guide.txt,"Each new joiner is assigned a buddy for the first 30 days plus a line manager for formal check-ins.",onboarding,yes
+Q05,"How many days off do I get per year?",vacation-policy.pdf,"Employees receive 25 paid vacation days per calendar year, accrued monthly.",hr,yes
+Q06,"Can unused holidays roll over to next year?",vacation-policy.pdf,"Up to 5 unused days may be carried into the next year and must be used by 31 March.",hr,no
+Q07,"My laptop is broken, who should I contact?",it-support-handbook.txt,"Raise a ticket in the IT service desk; hardware failures are P2 with a next-business-day replacement.",it-support,yes
+Q08,"How fast will someone answer an urgent IT ticket?",it-support-handbook.txt,"P1 tickets are acknowledged within 1 hour; P2 within 4 business hours.",it-support,yes
+Q09,"What rules apply to my account password?",security-policy.pdf,"Minimum 14 characters, MFA mandatory, no reuse of the last 5 passwords, password manager required.",security,yes
+Q10,"Am I allowed to store work files on a personal Google Drive?",security-policy.pdf,"No. Company data may only be stored in approved corporate storage; personal cloud accounts are prohibited.",security,yes
+Q11,"What has to happen before code goes live?",release-process.pdf,"Code review approval, green CI pipeline, QA sign-off, and a release ticket approved by the release manager.",engineering,yes
+Q12,"Who can approve a deployment to production?",release-process.pdf,"The release manager, or a delegated tech lead when the release manager is unavailable.",engineering,no
+Q13,"Is it fine to work from home permanently?",remote-work-policy.txt,"Hybrid is the default: minimum 2 office days per week; fully remote requires an exception approved by the department head.",hr,yes
+Q14,"What should I do if I think data has leaked?",incident-response-plan.pdf,"Report to the security team immediately via the incident hotline; do not attempt to investigate or remediate alone.",security,yes
+Q15,"How do I order a second monitor?",it-support-handbook.txt,"Submit an equipment request in the IT service desk; standard peripherals are approved by your line manager.",it-support,yes
+Q16,"What are the rules for using the company credit card?",corporate-card-rules.txt,"The card is for business expenses only; itemised receipts required; personal use must be reimbursed within 14 days.",expenses,no
+Q17,"Do I need permission to attend a paid conference?",learning-development-policy.pdf,"Yes. Training budget requests require line manager approval; the annual budget per employee is EUR 1500.",hr,yes
+Q18,"How is my performance evaluated?",performance-review-process.txt,"Twice-yearly review cycles with self-assessment, manager assessment, and peer feedback from at least 2 colleagues.",hr,yes
+Q19,"What happens if I lose my access badge?",security-policy.pdf,"Report the loss to facilities and security the same day; the badge is deactivated and a replacement issued within 2 business days.",security,no
+Q20,"Which parking spot is assigned to the CEO?",,"Not covered by the documentation — the assistant must answer that the information is not available rather than inventing it.",negative-test,n/a
