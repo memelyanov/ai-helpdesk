@@ -1,0 +1,692 @@
+<title>AI Helpdesk — PoC Concept &amp; Environment Setup</title>
+
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Two vocabularies, one bridge.
+   Ochre = the words a person uses.  Indigo = the words the
+   document uses.  Green = a confirmed match.  The typefaces
+   carry the same split: serif is the document's voice, the
+   grotesque is the system's, mono is data.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --paper:    #E7EAEE;
+  --stage:    #FCFCFD;
+  --panel:    #F0F2F6;
+  --rule:     #CFD5DE;
+  --rule-soft:#DFE4EA;
+  --ink:      #14161B;
+  --ink-2:    #3A414E;
+  --muted:    #6B7383;
+  --doc:      #3A3AA8;
+  --doc-soft: rgba(58, 58, 168, .09);
+  --ask:      #9C6614;
+  --ask-soft: rgba(156, 102, 20, .11);
+  --ok:       #196B50;
+  --ok-soft:  rgba(25, 107, 80, .11);
+  --shadow:   0 1px 2px rgba(20, 22, 27, .06), 0 18px 44px rgba(20, 22, 27, .10);
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", ui-monospace, "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:    #0C0E13;
+    --stage:    #14171E;
+    --panel:    #1A1E27;
+    --rule:     #2E3542;
+    --rule-soft:#242A34;
+    --ink:      #E9ECF2;
+    --ink-2:    #BEC5D1;
+    --muted:    #848D9D;
+    --doc:      #9E9EFF;
+    --doc-soft: rgba(158, 158, 255, .13);
+    --ask:      #E2AE52;
+    --ask-soft: rgba(226, 174, 82, .13);
+    --ok:       #52CCA0;
+    --ok-soft:  rgba(82, 204, 160, .13);
+    --shadow:   0 1px 2px rgba(0, 0, 0, .5), 0 20px 50px rgba(0, 0, 0, .45);
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper:    #0C0E13;
+  --stage:    #14171E;
+  --panel:    #1A1E27;
+  --rule:     #2E3542;
+  --rule-soft:#242A34;
+  --ink:      #E9ECF2;
+  --ink-2:    #BEC5D1;
+  --muted:    #848D9D;
+  --doc:      #9E9EFF;
+  --doc-soft: rgba(158, 158, 255, .13);
+  --ask:      #E2AE52;
+  --ask-soft: rgba(226, 174, 82, .13);
+  --ok:       #52CCA0;
+  --ok-soft:  rgba(82, 204, 160, .13);
+  --shadow:   0 1px 2px rgba(0, 0, 0, .5), 0 20px 50px rgba(0, 0, 0, .45);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+.deck { position: fixed; inset: 0; }
+
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1280px;
+  height: 720px;
+  margin-left: -640px;
+  margin-top: -360px;
+  transform-origin: center center;
+  background: var(--stage);
+  border: 1px solid var(--rule-soft);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* ── slides ───────────────────────────────────────────────── */
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: 54px 68px 66px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s ease;
+}
+.slide.on { opacity: 1; pointer-events: auto; }
+.slide.on > * { animation: rise .38s cubic-bezier(.2, .7, .3, 1) both; }
+.slide.on > *:nth-child(2) { animation-delay: .05s; }
+.slide.on > *:nth-child(3) { animation-delay: .09s; }
+.slide.on > *:nth-child(4) { animation-delay: .13s; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slide.on > * { transition: none; animation: none; }
+}
+
+/* ── typography ───────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+h1 { font-size: 76px; line-height: 1.02; letter-spacing: -.028em; font-weight: 700; margin: 0; text-wrap: balance; }
+h2 {
+  font-size: 38px; line-height: 1.1; letter-spacing: -.022em; font-weight: 700;
+  margin: 0 0 6px; text-wrap: balance;
+}
+.deck p { margin: 0; }
+.lede { font-size: 19px; line-height: 1.5; color: var(--ink-2); max-width: 62ch; }
+.small { font-size: 15px; line-height: 1.55; color: var(--muted); }
+.mono { font-family: var(--mono); }
+.serif { font-family: var(--serif); }
+strong { font-weight: 650; color: var(--ink); }
+
+.body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 26px; min-height: 0; }
+.head { flex: none; }
+
+/* ── slide furniture ──────────────────────────────────────── */
+.chrome {
+  position: absolute;
+  left: 68px; right: 68px; bottom: 24px;
+  display: flex; align-items: center; gap: 16px;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+  border-top: 1px solid var(--rule-soft);
+  padding-top: 12px;
+}
+.chrome .grow { flex: 1; }
+.pips { display: flex; gap: 5px; }
+.pip { width: 16px; height: 3px; border-radius: 2px; background: var(--rule); border: 0; padding: 0; cursor: pointer; }
+.pip.on { background: var(--doc); }
+.pip:focus-visible { outline: 2px solid var(--doc); outline-offset: 3px; }
+
+.nav { position: absolute; right: 20px; top: 18px; display: flex; gap: 6px; z-index: 5; }
+.nav button {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--panel); color: var(--ink-2);
+  border: 1px solid var(--rule-soft); border-radius: 4px;
+  padding: 5px 10px; cursor: pointer;
+}
+.nav button:hover { color: var(--ink); border-color: var(--rule); }
+.nav button:focus-visible { outline: 2px solid var(--doc); outline-offset: 2px; }
+
+/* ── the vocabulary-gap device ────────────────────────────── */
+.gap { display: grid; grid-template-columns: 1fr 96px 1fr; align-items: center; gap: 0; }
+.side { padding: 26px 28px; border-radius: 5px; }
+.side.ask { background: var(--ask-soft); border-left: 3px solid var(--ask); }
+.side.doc { background: var(--doc-soft); border-left: 3px solid var(--doc); }
+.side .tag {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .13em;
+  text-transform: uppercase; display: block; margin-bottom: 10px;
+}
+.side.ask .tag { color: var(--ask); }
+.side.doc .tag { color: var(--doc); }
+.side .said { font-size: 23px; line-height: 1.32; }
+.side.ask .said { font-family: var(--sans); }
+.side.doc .said { font-family: var(--serif); }
+
+.gulf { text-align: center; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: .1em; }
+.gulf .bar { height: 1px; background: var(--rule); margin: 0 8px 10px; }
+.verdict {
+  margin-top: 22px; text-align: center;
+  font-family: var(--mono); font-size: 15px; letter-spacing: .04em; color: var(--ink-2);
+}
+
+/* ── generic blocks ───────────────────────────────────────── */
+.cols { display: grid; gap: 20px; }
+.c2 { grid-template-columns: 1fr 1fr; }
+.c3 { grid-template-columns: repeat(3, 1fr); }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--rule-soft);
+  border-radius: 5px;
+  padding: 20px 22px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.card h3 { margin: 0; font-size: 17px; letter-spacing: -.01em; font-weight: 650; }
+.card p { font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.step { font-family: var(--mono); font-size: 12px; color: var(--doc); letter-spacing: .1em; }
+
+ul.plain { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+ul.plain li { font-size: 16px; line-height: 1.45; color: var(--ink-2); padding-left: 20px; position: relative; }
+ul.plain li::before {
+  content: ""; position: absolute; left: 2px; top: .58em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--doc); opacity: .55;
+}
+ul.plain li.no::before { background: var(--muted); opacity: .4; }
+
+/* ── pipeline diagram ─────────────────────────────────────── */
+.flow { display: flex; flex-direction: column; gap: 12px; }
+.flow-label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.flow-label::after { content: ""; flex: 1; height: 1px; background: var(--rule-soft); }
+.pipe { display: flex; align-items: stretch; gap: 0; }
+.node {
+  flex: 1; padding: 13px 14px;
+  background: var(--panel); border: 1px solid var(--rule-soft); border-radius: 4px;
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+}
+.node b { font-size: 14.5px; font-weight: 640; letter-spacing: -.005em; }
+.node span { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.node.key { border-color: var(--doc); background: var(--doc-soft); }
+.node.key span { color: var(--doc); }
+.arrow { flex: none; width: 30px; display: grid; place-items: center; color: var(--rule); font-size: 15px; }
+.store {
+  margin: 4px auto 0; padding: 10px 20px; text-align: center;
+  border: 1px dashed var(--rule); border-radius: 4px;
+  font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .06em;
+}
+
+/* ── chat mock ────────────────────────────────────────────── */
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.bubble { border-radius: 5px; padding: 15px 18px; }
+.bubble.q {
+  background: var(--ask-soft); border-left: 3px solid var(--ask);
+  font-size: 18px; line-height: 1.4;
+}
+.bubble.a {
+  background: var(--panel); border: 1px solid var(--rule-soft);
+  font-size: 15.5px; line-height: 1.55; color: var(--ink-2);
+}
+.bubble.a.refuse { border-left: 3px solid var(--ok); }
+.cite {
+  margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--rule-soft);
+  font-family: var(--mono); font-size: 11.5px; color: var(--doc); letter-spacing: .02em;
+}
+.speaker {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
+  text-transform: uppercase; display: block; margin-bottom: 7px; color: var(--muted);
+}
+
+/* ── tables ───────────────────────────────────────────────── */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th {
+  text-align: left; font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--muted);
+  padding: 0 14px 8px 0; border-bottom: 1px solid var(--rule);
+}
+td { padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule-soft); color: var(--ink-2); vertical-align: top; }
+td.k { color: var(--ink); font-weight: 620; white-space: nowrap; }
+td.m { font-family: var(--mono); font-size: 13px; }
+tr:last-child td { border-bottom: 0; }
+.ask-txt { color: var(--ask); }
+.doc-txt { color: var(--doc); font-family: var(--serif); font-size: 15px; }
+
+/* ── stat strip ───────────────────────────────────────────── */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule-soft); border: 1px solid var(--rule-soft); border-radius: 5px; overflow: hidden; }
+.stat { background: var(--stage); padding: 16px 18px; display: flex; flex-direction: column; gap: 5px; }
+.stat .n { font-size: 34px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+.stat .l { font-size: 13px; line-height: 1.35; color: var(--muted); }
+
+/* ── status list (environment) ────────────────────────────── */
+.status { display: flex; flex-direction: column; gap: 7px; }
+.row {
+  display: grid; grid-template-columns: 22px 1fr auto; align-items: baseline; gap: 12px;
+  padding: 8px 0; border-bottom: 1px solid var(--rule-soft); font-size: 15px;
+}
+.row:last-child { border-bottom: 0; }
+.mark { font-family: var(--mono); font-size: 13px; }
+.mark.ready { color: var(--ok); }
+.mark.todo { color: var(--muted); }
+.row .v { font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: right; }
+.row.todo-row .what { color: var(--muted); }
+.what strong { font-weight: 640; }
+
+/* ── title slide ──────────────────────────────────────────── */
+.title-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+.rule-accent { width: 74px; height: 4px; background: var(--doc); border-radius: 2px; }
+.byline { display: flex; gap: 28px; font-family: var(--mono); font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.byline b { color: var(--ink-2); font-weight: 500; }
+
+.hint {
+  position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); opacity: .6; pointer-events: none;
+}
+
+@media print {
+  body { overflow: visible; background: #fff; }
+  .deck { position: static; }
+  .nav, .hint { display: none; }
+  .stage {
+    position: relative; left: 0; top: 0; transform: none !important;
+    margin: 0; border: 0; border-radius: 0; box-shadow: none;
+    page-break-after: always; break-after: page;
+  }
+  .slide { position: relative; inset: auto; opacity: 1 !important; animation: none !important; }
+}
+</style>
+
+<div class="deck">
+  <div class="nav">
+    <button id="prev" aria-label="Previous slide">◀</button>
+    <button id="next" aria-label="Next slide">▶</button>
+    <button id="full" aria-label="Toggle fullscreen">⤢</button>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- 1 ─ title -->
+    <section class="slide">
+      <div class="title-wrap">
+        <p class="eyebrow">EPMGDPL-3139 · Week 1 · Java track</p>
+        <h1>AI&nbsp;Helpdesk</h1>
+        <div class="rule-accent"></div>
+        <p class="lede" style="font-size:22px">
+          Ask the company's own documents a question in plain language.
+          Get an answer back — with the page it came from.
+        </p>
+      </div>
+      <div class="byline">
+        <span><b>Michael Emelyanov</b> · Java</span>
+        <span>PoC concept &amp; environment setup</span>
+        <span>13 Aug 2026</span>
+      </div>
+      <div class="chrome"><span>AI Helpdesk</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 2 ─ the problem -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">The problem</p>
+        <h2>The document exists. Nobody can find it.</h2>
+      </div>
+      <div class="body">
+        <div>
+          <div class="gap">
+            <div class="side ask">
+              <span class="tag">What the employee types</span>
+              <p class="said">“how do I get my money back for a taxi to the airport?”</p>
+            </div>
+            <div class="gulf"><div class="bar"></div>vs.</div>
+            <div class="side doc">
+              <span class="tag">What the document is called</span>
+              <p class="said">Business Travel Expense Reimbursement Policy</p>
+            </div>
+          </div>
+          <p class="verdict">shared keywords: <strong>0</strong> &nbsp;→&nbsp; search results: <strong>0</strong></p>
+        </div>
+        <ul class="plain">
+          <li>Finding the answer requires already knowing which document holds it.</li>
+          <li>Even a correct hit returns a 30-page PDF — the answer is a paragraph, not a file.</li>
+          <li>So people ask a colleague instead, and a self-service question becomes an interruption.</li>
+        </ul>
+      </div>
+      <div class="chrome"><span>The problem</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 3 ─ the idea -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">The idea</p>
+        <h2>Stop searching for a document. Ask for an answer.</h2>
+      </div>
+      <div class="body">
+        <div class="cols c3">
+          <div class="card">
+            <span class="step">01 · INDEX</span>
+            <h3>Upload to a vector database</h3>
+            <p>Parse each <span class="mono">.txt</span> / <span class="mono">.pdf</span>, split it into overlapping chunks, and store each chunk as an embedding.</p>
+          </div>
+          <div class="card">
+            <span class="step">02 · RETRIEVE</span>
+            <h3>Search by meaning</h3>
+            <p>The question becomes a vector too. Similarity search returns the closest chunks — no shared keywords required.</p>
+          </div>
+          <div class="card">
+            <span class="step">03 · ANSWER</span>
+            <h3>Ground the LLM</h3>
+            <p>Those chunks go to the model as context, with one instruction: answer only from this, and cite it.</p>
+          </div>
+        </div>
+        <div class="cols c2">
+          <div class="card" style="background:var(--ok-soft);border-color:transparent">
+            <h3 style="color:var(--ok)">The hard rule</h3>
+            <p>If retrieval finds nothing relevant, the answer is <strong>“I don't have this in the documentation.”</strong> A confident invention is worse than no answer.</p>
+          </div>
+          <div class="card" style="background:transparent;border-style:dashed">
+            <h3>Why RAG, not fine-tuning</h3>
+            <p>Documents change — re-indexing a file takes seconds, retraining does not. And retrieval can cite its source; model weights cannot.</p>
+          </div>
+        </div>
+      </div>
+      <div class="chrome"><span>The idea</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 4 ─ architecture -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">How it works</p>
+        <h2>Two flows, one store</h2>
+      </div>
+      <div class="body" style="gap:30px">
+        <div class="flow">
+          <p class="flow-label" style="color:var(--doc)">Ingest &nbsp;·&nbsp; on upload</p>
+          <div class="pipe">
+            <div class="node"><b>Document</b><span>.txt / .pdf</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>Parse</b><span>Apache Tika</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>Chunk</b><span>~500–1000 tok, overlap</span></div>
+            <div class="arrow">→</div>
+            <div class="node key"><b>Embed</b><span>text-embedding-3-small</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>Store</b><span>vector + text + metadata</span></div>
+          </div>
+        </div>
+
+        <div class="store">pgvector on PostgreSQL &nbsp;—&nbsp; chunk, embedding, filename, page</div>
+
+        <div class="flow">
+          <p class="flow-label" style="color:var(--ask)">Ask &nbsp;·&nbsp; per question</p>
+          <div class="pipe">
+            <div class="node"><b>Question</b><span>plain language</span></div>
+            <div class="arrow">→</div>
+            <div class="node key"><b>Embed query</b><span>same model</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>Retrieve</b><span>top-K ≈ 4–6</span></div>
+            <div class="arrow">→</div>
+            <div class="node key"><b>Generate</b><span>gpt-4o-mini</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>Answer</b><span>+ source citations</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="chrome"><span>Architecture</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 5 ─ walkthrough -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">Walkthrough</p>
+        <h2>What the user actually sees</h2>
+      </div>
+      <div class="body">
+        <div class="chat">
+          <div class="bubble q"><span class="speaker">Employee</span>Can I expense a taxi from the airport when I travel for work?</div>
+          <div class="bubble a">
+            <span class="speaker">AI Helpdesk</span>
+            Yes. Ground transportation between the airport and your hotel or the office at the destination is
+            reimbursable for approved business travel. Submit the receipt within 30 days of returning.
+            Rides above EUR 80 need your line manager's approval in advance.
+            <div class="cite">Sources — travel-expense-policy.pdf (p. 5) · corporate-card-rules.txt</div>
+          </div>
+        </div>
+        <div class="chat">
+          <div class="bubble q"><span class="speaker">Employee</span>Which parking spot is assigned to the CEO?</div>
+          <div class="bubble a refuse">
+            <span class="speaker">AI Helpdesk</span>
+            I don't have this in the documentation. The corpus covers visitor parking and parking charges as a
+            travel expense, but nothing about assigned spaces.
+          </div>
+        </div>
+        <p class="small">
+          One turn, one answer, and a citation to verify it — or an honest refusal. The second case is the one
+          worth watching: parking <em>is</em> in the corpus, so retrieval will return something. It still has to say no.
+        </p>
+      </div>
+      <div class="chrome"><span>Walkthrough</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 6 ─ corpus & evaluation -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">Data &amp; evaluation · built this week</p>
+        <h2>A corpus designed so the score means something</h2>
+      </div>
+      <div class="body">
+        <div class="stats">
+          <div class="stat"><span class="n">16</span><span class="l">synthetic documents<br>7 txt · 9 pdf · ~107k chars</span></div>
+          <div class="stat"><span class="n">20</span><span class="l">evaluation questions<br>with expected source doc</span></div>
+          <div class="stat"><span class="n" style="color:var(--ask)">14</span><span class="l">worded to defeat<br>keyword search</span></div>
+          <div class="stat"><span class="n" style="color:var(--doc)">5</span><span class="l">distractor documents<br>that answer nothing</span></div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="width:44%">The user asks</th><th>The document says</th></tr></thead>
+            <tbody>
+              <tr><td class="ask-txt">my laptop is broken</td><td class="doc-txt">notebook and workstation hardware faults</td></tr>
+              <tr><td class="ask-txt">store work files on a personal Google Drive</td><td class="doc-txt">consumer cloud storage registered to the individual</td></tr>
+              <tr><td class="ask-txt">how many days off per year</td><td class="doc-txt">annual leave entitlement; twenty-five paid vacation days</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">
+          Every fact is genuinely in the named document — the wording a person would reach for is not.
+          A keyword search over this corpus fails most of these, which is the point: if it passed,
+          a good retrieval score would prove nothing about the embeddings.
+          <strong>Target: the correct document in the top-K chunks for ≥ 80% of questions.</strong>
+        </p>
+      </div>
+      <div class="chrome"><span>Data &amp; evaluation</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 7 ─ stack -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">Implementation</p>
+        <h2>The stack</h2>
+      </div>
+      <div class="body">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th style="width:20%">Layer</th><th style="width:33%">Choice</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr><td class="k">Runtime</td><td class="m">Java 17 · Spring Boot 3</td><td>Matches the Java track and the course examples</td></tr>
+              <tr><td class="k">RAG orchestration</td><td class="m">Spring AI <span style="color:var(--muted)">(alt: LangChain4j)</span></td><td>Native Spring abstractions for embeddings, vector stores, chat</td></tr>
+              <tr><td class="k">LLM &amp; embeddings</td><td class="m">OpenAI — gpt-4o-mini<br>text-embedding-3-small</td><td>Strong quality/cost ratio; embeddings computed once per document</td></tr>
+              <tr><td class="k">Vector store</td><td class="m">pgvector on PostgreSQL</td><td>One database for vectors and metadata; trivial to run in Docker</td></tr>
+              <tr><td class="k">Parsing</td><td class="m">Apache Tika</td><td>Handles .pdf and .txt behind one API</td></tr>
+              <tr><td class="k">API</td><td class="m">Spring Web REST<br>POST /documents · POST /chat</td><td>Two endpoints — the whole surface the UI needs</td></tr>
+              <tr><td class="k">Frontend</td><td class="m">Angular 21, standalone</td><td>Chat view + upload view, talking to the REST API</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="chrome"><span>Stack</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 8 ─ environment -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">Environment setup</p>
+        <h2>Where the environment stands today</h2>
+      </div>
+      <div class="body">
+        <div class="cols c2" style="gap:32px">
+          <div>
+            <p class="flow-label" style="color:var(--ok);margin-bottom:12px">Installed and verified</p>
+            <div class="status">
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>JDK 17</strong> — JAVA_HOME pinned</span><span class="v">17.0</span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Maven</strong></span><span class="v">3.9.16</span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Node / npm</strong> — Angular 21 needs ≥ 20.19</span><span class="v">22.22 / 10.9</span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Docker + Compose</strong></span><span class="v">29.6 / v5.3</span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Git repository</strong> — concept + corpus committed</span><span class="v">4 commits</span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>OpenAI API key</strong> — env var, never committed</span><span class="v">env</span></div>
+            </div>
+          </div>
+          <div>
+            <p class="flow-label" style="color:var(--muted);margin-bottom:12px">Next, in order</p>
+            <div class="status">
+              <div class="row todo-row"><span class="mark todo">○</span><span class="what">pgvector container up via Compose</span><span class="v"></span></div>
+              <div class="row todo-row"><span class="mark todo">○</span><span class="what">Spring Boot scaffold + Spring AI wiring</span><span class="v"></span></div>
+              <div class="row todo-row"><span class="mark todo">○</span><span class="what">Ingestion endpoint — Tika → chunk → embed</span><span class="v"></span></div>
+              <div class="row todo-row"><span class="mark todo">○</span><span class="what">Chat endpoint — retrieve → augment → answer</span><span class="v"></span></div>
+              <div class="row todo-row"><span class="mark todo">○</span><span class="what">Angular chat + upload views</span><span class="v"></span></div>
+              <div class="row todo-row"><span class="mark todo">○</span><span class="what">Run the evaluation set; tune chunk size and K</span><span class="v"></span></div>
+            </div>
+          </div>
+        </div>
+        <p class="small">
+          Deliberately minimal infrastructure: <strong>only the database runs in a container.</strong>
+          Backend and frontend run locally, so the edit-run loop stays short and there is no orchestration
+          to debug instead of the actual PoC.
+        </p>
+      </div>
+      <div class="chrome"><span>Environment setup</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 9 ─ scope & next -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">Scope</p>
+        <h2>What I am proving — and what I am not</h2>
+      </div>
+      <div class="body">
+        <div class="cols c2">
+          <div class="card">
+            <h3 style="color:var(--doc)">In scope</h3>
+            <ul class="plain" style="margin-top:4px">
+              <li>Upload and index <span class="mono">.txt</span> / <span class="mono">.pdf</span></li>
+              <li>Semantic retrieval over the indexed corpus</li>
+              <li>Grounded answers with source citations</li>
+              <li>Angular chat + upload UI</li>
+              <li>Measured retrieval quality against the CSV</li>
+            </ul>
+          </div>
+          <div class="card" style="background:transparent;border-style:dashed">
+            <h3 style="color:var(--muted)">Out of scope</h3>
+            <ul class="plain" style="margin-top:4px">
+              <li class="no">Auth and per-user document permissions</li>
+              <li class="no">Real confidential data</li>
+              <li class="no">OCR of scanned PDFs, tables and images</li>
+              <li class="no">Multi-turn conversation memory</li>
+              <li class="no">Visual polish beyond a working chat</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card" style="background:var(--doc-soft);border-color:transparent">
+          <h3>Success is five statements, all checkable</h3>
+          <p style="color:var(--ink)">
+            A document uploaded is searchable seconds later · the right source lands in the top-K for
+            <strong>≥ 80%</strong> of the 20 questions · every answer cites its document · an uncovered question
+            is refused, not invented · end to end under ~5 seconds.
+            <span style="color:var(--muted)">&nbsp;— demo in Week 2.</span>
+          </p>
+        </div>
+      </div>
+      <div class="chrome"><span>Scope &amp; next steps</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+  </div>
+  <p class="hint">← → to navigate &nbsp;·&nbsp; F for fullscreen</p>
+</div>
+
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(stage.querySelectorAll('.slide'));
+  var i = 0;
+
+  // Every slide's footer gets the same pip row and counter.
+  slides.forEach(function (slide, idx) {
+    var pips = slide.querySelector('.pips');
+    slides.forEach(function (_, j) {
+      var b = document.createElement('button');
+      b.className = 'pip';
+      b.setAttribute('aria-label', 'Go to slide ' + (j + 1));
+      b.addEventListener('click', function () { go(j); });
+      pips.appendChild(b);
+    });
+    slide.querySelector('.num').textContent = (idx + 1) + ' / ' + slides.length;
+  });
+
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, idx) {
+      s.classList.toggle('on', idx === i);
+      s.setAttribute('aria-hidden', idx === i ? 'false' : 'true');
+      Array.prototype.forEach.call(s.querySelectorAll('.pip'), function (p, j) {
+        p.classList.toggle('on', j <= i);
+      });
+    });
+  }
+
+  function fit() {
+    var s = Math.min(window.innerWidth / 1320, window.innerHeight / 760);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+
+  document.getElementById('prev').addEventListener('click', function () { go(i - 1); });
+  document.getElementById('next').addEventListener('click', function () { go(i + 1); });
+  document.getElementById('full').addEventListener('click', function () {
+    if (document.fullscreenElement) { document.exitFullscreen(); }
+    else if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen(); }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') { go(i + 1); e.preventDefault(); }
+    else if (k === 'ArrowLeft' || k === 'PageUp') { go(i - 1); e.preventDefault(); }
+    else if (k === 'Home') { go(0); }
+    else if (k === 'End') { go(slides.length - 1); }
+    else if (k === 'f' || k === 'F') { document.getElementById('full').click(); }
+  });
+
+  window.addEventListener('resize', fit);
+  fit();
+  go(0);
+})();
+</script>
