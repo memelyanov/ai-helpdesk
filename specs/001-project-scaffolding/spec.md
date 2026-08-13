@@ -77,7 +77,8 @@ the suite pass. No frontend involvement.
    indicates the service is healthy and reports the database as reachable.
 3. **Given** the database environment is **not** running, **When** the backend is started,
    **Then** the service still starts and its health check reports the database as unreachable,
-   with a message a developer can act on — it does not crash or restart in a loop.
+   naming the database as the failing dependency and including the underlying connection error
+   text — it does not crash or restart in a loop.
 4. **Given** a clean checkout, **When** the developer runs the documented backend test command,
    **Then** the suite executes and every test passes, including at least one test exercising the
    health check.
@@ -151,17 +152,22 @@ running.
 
 ### Edge Cases
 
+> Each edge case below is backed by a functional requirement. Where a bullet carries a behavioural
+> expectation, the requirement that binds it is named — narrative alone does not oblige an
+> implementation.
+
 - **A required local port is already occupied.** Startup fails with a message naming the port and
-  the part that wanted it, rather than failing silently or hanging.
+  the part that wanted it, rather than failing silently or hanging. **(FR-026)**
 - **Prerequisite tooling is missing or the wrong major version.** The developer meets a clear
   failure that names the missing tool; the documentation states required versions so this is
   diagnosable before it happens.
 - **The backend starts before the database is ready.** Covered explicitly: the service starts and
   reports the database as unreachable through its health check rather than crash-looping.
 - **A stale database volume exists from an earlier attempt.** The documentation states how to
-  discard the stored state and start clean.
+  discard the stored state and start clean. **(FR-024)**
 - **The database container is restarted while the backend is running.** The backend recovers and
-  its health check returns to reporting the database as reachable, without a manual restart.
+  its health check returns to reporting the database as reachable, without a manual restart and
+  within the window FR-025 sets. **(FR-025)**
 - **A developer runs only one part.** Each part starts on its own; only the backend's database
   health signal is affected by the absence of another part.
 - **AI provider credentials are absent or incomplete.** The backend starts and reports the
@@ -188,6 +194,9 @@ running.
 - **FR-003**: Data written to the database MUST survive stopping and restarting the environment.
 - **FR-004**: The database MUST be reachable from the host machine on a documented, fixed local
   port, using documented local development credentials.
+- **FR-024**: The repository MUST document a command that discards the stored database state and
+  returns the environment to its initial condition, and MUST identify that command as destructive
+  and distinguish it from the ordinary stop command of FR-001.
 
 **Backend service**
 
@@ -196,7 +205,12 @@ running.
 - **FR-006**: The backend MUST expose a health check reporting its own status and whether its
   database connection is usable.
 - **FR-007**: The backend MUST start successfully when the database is unavailable, reporting the
-  unreachable database through the health check instead of failing to boot.
+  unreachable database through the health check instead of failing to boot. The report MUST
+  identify the database as the failing dependency and MUST carry the underlying connection error
+  text, so the cause is diagnosable without reading application logs or source.
+- **FR-025**: When the database becomes reachable after having been unavailable, the backend MUST
+  report it as reachable again **without being restarted**, within 30 seconds of the database
+  beginning to accept connections.
 - **FR-008**: The backend MUST include an automated test suite, runnable with a single documented
   command, containing at least one passing test that exercises the health check.
 - **FR-009**: Database connection settings and any external API credentials — including the AI
@@ -235,8 +249,16 @@ running.
 **Across the whole scaffold**
 
 - **FR-013**: Each of the three parts MUST be startable independently of the others.
-- **FR-014**: The repository MUST document, in one place, the prerequisites, the start and stop
-  command for each part, the local address each part serves on, and the recommended start order.
+- **FR-014**: The repository MUST document, in one place, the prerequisites, any one-time setup
+  step, the start and stop command for each part, the local address each part serves on, and the
+  recommended start order. A one-time dependency-installation step MUST be documented as a
+  prerequisite, distinct from the start command it precedes.
+- **FR-026**: When a required local port is already in use, the affected part MUST fail to start
+  with a message naming the occupied port. It MUST NOT bind an alternative port instead, because
+  the documented addresses of FR-014 would then be wrong.
+- **FR-027**: The setup documentation MUST state which shell its commands are written for, and
+  every documented command MUST be executable as written on the primary development platform.
+  Where a command differs between the supported shells, each form MUST be given.
 - **FR-015**: Build outputs, downloaded dependencies, and local environment files MUST be
   excluded from version control.
 - **FR-016**: This feature MUST NOT implement any PoC behaviour — no document upload, parsing,
@@ -256,7 +278,9 @@ running.
   prerequisites has all three parts running in **under 15 minutes**, using the documentation
   alone and asking no questions.
 - **SC-002**: Each of the three parts starts with **exactly one** documented command and produces
-  a verifiable running signal (a reachable port and a health or page check).
+  a verifiable running signal (a reachable port and a health or page check). A one-time
+  dependency-installation step counts as a prerequisite rather than a start command, and is
+  excluded from this count — it is performed once per checkout, not on every start.
 - **SC-003**: Both automated test suites complete with **zero failures** and zero skipped tests on
   a clean checkout.
 - **SC-004**: Stopping and restarting the database environment preserves **100%** of previously
@@ -284,6 +308,10 @@ running.
   production configuration is in scope for this feature.
 - **A single developer on one machine at a time.** Fixed local ports are acceptable; no port
   allocation strategy is needed.
+- **The primary development platform is Windows, with PowerShell as its shell.** That is the
+  machine this feature is built and validated on, so FR-027 is satisfied against it first. The
+  three parts themselves are OS-neutral; only the documented commands are shell-specific, and
+  FR-027 governs how that is handled rather than restricting the project to one platform.
 - **The health check reports database reachability** rather than the backend refusing to start
   without a database. This keeps the frontend and backend independently runnable, which SC-005
   requires.
@@ -299,9 +327,10 @@ running.
   `AZURE_OPEN_AI_DEPLOYMENT_NAME`; this feature reuses those names rather than introducing
   parallel ones. `OPENAI_API_KEY` is not set in that environment, so the direct-OpenAI path is not
   currently usable.
-- **The constitution is amended to Azure OpenAI before implementation starts.** Its Technology
-  Stack table currently mandates the OpenAI API directly and forbids substitution without an
-  amendment, so this feature is blocked on that amendment landing first.
+- **The constitution mandates Azure OpenAI.** Ratified in v1.3.0 on 2026-08-13, which also fixes
+  the four environment variable names and requires chat and embeddings to use separate
+  deployments. This assumption was a blocking dependency when written; the amendment has landed
+  and it no longer blocks implementation.
 - **Azure OpenAI binds one model per deployment**, so chat and embeddings require two separate
   deployments and two separate names. The embedding deployment may not exist yet; creating it is a
   prerequisite of the ingestion feature, not of this one.
