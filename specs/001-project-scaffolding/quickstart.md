@@ -7,7 +7,9 @@ and its acceptance scenarios, so working through this document top to bottom is 
 validation pass.
 
 > This is a validation guide, not an implementation guide. Commands and expected outcomes only —
-> the code that makes them work is produced by `/speckit-tasks` and the implementation phase.
+> the code that makes them work is produced by `/speckit-tasks` and the implementation phase. It
+> supports `README.md`, which FR-014 designates as the single place onboarding documentation lives;
+> if the two ever disagree, `README.md` governs.
 
 ## Prerequisites
 

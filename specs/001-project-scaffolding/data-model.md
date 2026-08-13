@@ -75,6 +75,12 @@ contribution and the verification, and because the ingestion feature inherits it
 | `chatDeploymentName` | `AZURE_OPEN_AI_DEPLOYMENT_NAME` | yes | ✅ required |
 | `embeddingDeploymentName` | `AZURE_OPEN_AI_EMBEDDING_DEPLOYMENT_NAME` | yes | ❌ excluded (FR-023) |
 
+**Field-name mapping**: the four bound fields above map to the health `missing` list one-to-one —
+`apiKey`→`api-key`, `endpoint`→`endpoint`, `chatDeploymentName`→`chat-deployment-name`. One naming
+scheme (camelCase, internal) and one (kebab-case, wire format) describe the same set of values;
+`embeddingDeploymentName` never appears in `missing` because it is excluded from completeness (see
+below) and reported only by the on-demand verification.
+
 **Completeness rule** (FR-021): complete only when `apiKey`, `endpoint` and `chatDeploymentName`
 are all present and non-blank. Any other combination — including three of four present — is
 incomplete. There is no partially-usable state.

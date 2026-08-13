@@ -104,7 +104,15 @@ The embedding deployment name is deliberately excluded from this definition — 
 be unset in this feature. It is reported separately by the verification.
 
 Partial configuration (for example an endpoint with no key) is **incomplete**, never complete. A
-half-set environment must not be able to present itself as working.
+half-set environment must not be able to present itself as working. Every combination is covered
+by the same rule — there is no case-by-case list to maintain:
+
+| Key | Endpoint | Chat deployment | Result |
+|---|---|---|---|
+| ✅ | ✅ | ✅ | Complete |
+| any other combination of the three (5 remaining, including chat-deployment-only or embedding-set-but-chat-missing) | | | Incomplete |
+
+(Embedding deployment name is not one of the three inputs to this table — see above.)
 
 ## Health contribution
 

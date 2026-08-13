@@ -113,6 +113,21 @@ still gets a healthy service.
   it is never reported as `UP`
 - No request is made to Azure while producing this response
 
+### Combined degradation — database unreachable and Azure unconfigured together
+
+Not a fourth case: the `db` and `azureOpenAi` components are computed independently and simply
+appear together, each exactly as documented in Case B and Case C respectively. Aggregation takes
+the most severe status present (`DOWN` outranks `UNKNOWN`), so the overall result is Case B's `503`
+with `azureOpenAi` still reporting `UNKNOWN` and its `missing` list in the same payload. No special
+handling is required or specified beyond composing the two cases already defined.
+
+### Field-name note (Case A vs Case B)
+
+Case A's `azureOpenAi.details` shows three booleans (`configured`, `endpointConfigured`,
+`chatDeploymentConfigured`); Case B's example shows only `configured` for brevity. This is not a
+contract difference — the same `azureOpenAi` component shape applies regardless of `db`'s status,
+per the "fields beyond these MUST NOT be asserted" rule above.
+
 ### Why 503 for the database but 200 for Azure
 
 They mean different things. An unreachable database is a **fault**: the service is configured to
