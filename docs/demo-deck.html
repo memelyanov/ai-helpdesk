@@ -213,6 +213,8 @@ ul.plain li::before {
   width: 6px; height: 6px; border-radius: 50%; background: var(--doc); opacity: .55;
 }
 ul.plain li.no::before { background: var(--muted); opacity: .4; }
+ul.plain.ask li::before { background: var(--ask); }
+ul.plain.tight li { font-size: 15px; }
 
 /* ── pipeline diagram ─────────────────────────────────────── */
 .flow { display: flex; flex-direction: column; gap: 12px; }
@@ -231,6 +233,8 @@ ul.plain li.no::before { background: var(--muted); opacity: .4; }
 .node span { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 .node.key { border-color: var(--doc); background: var(--doc-soft); }
 .node.key span { color: var(--doc); }
+.node.human { border-color: var(--ask); background: var(--ask-soft); }
+.node.human span { color: var(--ask); }
 .arrow { flex: none; width: 30px; display: grid; place-items: center; color: var(--rule); font-size: 15px; }
 .store {
   margin: 4px auto 0; padding: 10px 20px; text-align: center;
@@ -559,12 +563,14 @@ tr:last-child td { border-bottom: 0; }
           <div>
             <p class="flow-label" style="color:var(--ok);margin-bottom:12px">Installed and verified</p>
             <div class="status">
-              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>JDK 17</strong> — JAVA_HOME pinned</span><span class="v">17.0</span></div>
-              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Maven</strong></span><span class="v">3.9.16</span></div>
-              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Node / npm</strong> — Angular 21 needs ≥ 20.19</span><span class="v">22.22 / 10.9</span></div>
-              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Docker + Compose</strong></span><span class="v">29.6 / v5.3</span></div>
-              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Git repository</strong> — concept + corpus committed</span><span class="v">4 commits</span></div>
-              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>OpenAI API key</strong> — env var, never committed</span><span class="v">env</span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>JDK</strong> — JAVA_HOME pinned</span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Maven</strong></span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Node / npm</strong> — meets the Angular requirement</span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Docker + Compose</strong></span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Git repository</strong> — concept + corpus committed</span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>OpenAI API key</strong> — env var, never committed</span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Claude Code</strong> — agentic CLI, AI development</span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>VS Code</strong> — diff review, Claude Code extension</span><span class="v"></span></div>
             </div>
           </div>
           <div>
@@ -588,7 +594,58 @@ tr:last-child td { border-bottom: 0; }
       <div class="chrome"><span>Environment setup</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
     </section>
 
-    <!-- 9 ─ scope & next -->
+    <!-- 9 ─ ways of working -->
+    <section class="slide">
+      <div class="head">
+        <p class="eyebrow">Ways of working</p>
+        <h2>Claude Code writes it. I read it before it lands.</h2>
+      </div>
+      <div class="body">
+        <div class="flow">
+          <p class="flow-label" style="color:var(--muted)">The loop &nbsp;·&nbsp; every change</p>
+          <div class="pipe">
+            <div class="node"><b>Prompt</b><span>intent + constraints</span></div>
+            <div class="arrow">→</div>
+            <div class="node key"><b>Claude Code</b><span>edits files, runs commands</span></div>
+            <div class="arrow">→</div>
+            <div class="node human"><b>Review in VS Code</b><span>diff, hunk by hunk</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>Run</b><span>Maven · npm · Docker</span></div>
+            <div class="arrow">→</div>
+            <div class="node"><b>Commit</b><span>one change per commit</span></div>
+          </div>
+        </div>
+        <div class="cols c2">
+          <div class="card">
+            <span class="step">AI DEVELOPMENT</span>
+            <h3>Claude Code</h3>
+            <ul class="plain tight" style="margin-top:2px">
+              <li>Drafted the concept doc, the README and this deck from a short brief</li>
+              <li>Generated the 16-document corpus and the 20-question evaluation set</li>
+              <li>Runs the toolchain itself — Maven, npm, Docker, git — and reports failures</li>
+              <li>Next: Spring Boot + Spring AI scaffold, both endpoints, the Angular views</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="step" style="color:var(--ask)">REVIEW &amp; INTERACTION</span>
+            <h3>VS Code</h3>
+            <ul class="plain tight ask" style="margin-top:2px">
+              <li>Source-control view: every hunk read before it is staged</li>
+              <li>Claude Code extension keeps the conversation beside the file it is changing</li>
+              <li>Java and Angular language servers catch what a diff read misses</li>
+              <li>Integrated terminal for the run and debug loop</li>
+            </ul>
+          </div>
+        </div>
+        <p class="small">
+          AI-assisted, not AI-trusted. The concept, the corpus and this deck came out of that loop, and
+          nothing was committed unread — the same rule applies to the code in Week 2.
+        </p>
+      </div>
+      <div class="chrome"><span>Ways of working</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
+    </section>
+
+    <!-- 10 ─ scope & next -->
     <section class="slide">
       <div class="head">
         <p class="eyebrow">Scope</p>
