@@ -435,7 +435,7 @@ tr:last-child td { border-bottom: 0; }
             <div class="arrow">→</div>
             <div class="node"><b>Chunk</b><span>~500–1000 tok, overlap</span></div>
             <div class="arrow">→</div>
-            <div class="node key"><b>Embed</b><span>text-embedding-3-small</span></div>
+            <div class="node key"><b>Embed</b><span>Azure OpenAI</span></div>
             <div class="arrow">→</div>
             <div class="node"><b>Store</b><span>vector + text + metadata</span></div>
           </div>
@@ -452,7 +452,7 @@ tr:last-child td { border-bottom: 0; }
             <div class="arrow">→</div>
             <div class="node"><b>Retrieve</b><span>top-K ≈ 4–6</span></div>
             <div class="arrow">→</div>
-            <div class="node key"><b>Generate</b><span>gpt-4o-mini</span></div>
+            <div class="node key"><b>Generate</b><span>Azure OpenAI</span></div>
             <div class="arrow">→</div>
             <div class="node"><b>Answer</b><span>+ source citations</span></div>
           </div>
@@ -540,7 +540,7 @@ tr:last-child td { border-bottom: 0; }
             <tbody>
               <tr><td class="k">Runtime</td><td class="m">Java 17 · Spring Boot 3</td><td>Matches the Java track and the course examples</td></tr>
               <tr><td class="k">RAG orchestration</td><td class="m">Spring AI <span style="color:var(--muted)">(alt: LangChain4j)</span></td><td>Native Spring abstractions for embeddings, vector stores, chat</td></tr>
-              <tr><td class="k">LLM &amp; embeddings</td><td class="m">OpenAI — gpt-4o-mini<br>text-embedding-3-small</td><td>Strong quality/cost ratio; embeddings computed once per document</td></tr>
+              <tr><td class="k">LLM &amp; embeddings</td><td class="m">Azure OpenAI — chat deployment<br>+ embedding deployment</td><td>Tenant-scoped data handling and regional residency; one deployment per model, referenced by name</td></tr>
               <tr><td class="k">Vector store</td><td class="m">pgvector on PostgreSQL</td><td>One database for vectors and metadata; trivial to run in Docker</td></tr>
               <tr><td class="k">Parsing</td><td class="m">Apache Tika</td><td>Handles .pdf and .txt behind one API</td></tr>
               <tr><td class="k">API</td><td class="m">Spring Web REST<br>POST /documents · POST /chat</td><td>Two endpoints — the whole surface the UI needs</td></tr>
@@ -568,7 +568,7 @@ tr:last-child td { border-bottom: 0; }
               <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Node / npm</strong> — meets the Angular requirement</span><span class="v"></span></div>
               <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Docker + Compose</strong></span><span class="v"></span></div>
               <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Git repository</strong> — concept + corpus committed</span><span class="v"></span></div>
-              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>OpenAI API key</strong> — env var, never committed</span><span class="v"></span></div>
+              <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Azure OpenAI credentials</strong> — env vars, never committed</span><span class="v"></span></div>
               <div class="row"><span class="mark ready">✓</span><span class="what"><strong>Claude Code</strong> — agentic CLI, AI development</span><span class="v"></span></div>
               <div class="row"><span class="mark ready">✓</span><span class="what"><strong>VS Code</strong> — diff review, Claude Code extension</span><span class="v"></span></div>
             </div>
@@ -598,13 +598,13 @@ tr:last-child td { border-bottom: 0; }
     <section class="slide">
       <div class="head">
         <p class="eyebrow">Ways of working</p>
-        <h2>Claude Code writes it. I read it before it lands.</h2>
+        <h2>Spec first. Claude Code builds it. I read it before it lands.</h2>
       </div>
       <div class="body">
         <div class="flow">
-          <p class="flow-label" style="color:var(--muted)">The loop &nbsp;·&nbsp; every change</p>
+          <p class="flow-label" style="color:var(--muted)">The loop &nbsp;·&nbsp; every task, spec to commit</p>
           <div class="pipe">
-            <div class="node"><b>Prompt</b><span>intent + constraints</span></div>
+            <div class="node"><b>Spec Kit</b><span>spec → plan → tasks</span></div>
             <div class="arrow">→</div>
             <div class="node key"><b>Claude Code</b><span>edits files, runs commands</span></div>
             <div class="arrow">→</div>
@@ -612,18 +612,28 @@ tr:last-child td { border-bottom: 0; }
             <div class="arrow">→</div>
             <div class="node"><b>Run</b><span>Maven · npm · Docker</span></div>
             <div class="arrow">→</div>
-            <div class="node"><b>Commit</b><span>one change per commit</span></div>
+            <div class="node"><b>Commit</b><span>traces back to spec.md</span></div>
           </div>
         </div>
-        <div class="cols c2">
+        <div class="cols c3">
           <div class="card">
-            <span class="step">AI DEVELOPMENT</span>
+            <span class="step">PROCESS</span>
+            <h3>GitHub Spec Kit</h3>
+            <ul class="plain tight" style="margin-top:2px">
+              <li>Every feature starts as a <span class="mono">spec.md</span> — requirements before code</li>
+              <li>The plan turns it into <span class="mono">plan.md</span> plus research and data-model notes</li>
+              <li>Tasks break the plan into an ordered, checkable <span class="mono">tasks.md</span></li>
+              <li>The constitution sets the non-negotiables — Spec-First and TDD first among them</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="step" style="color:var(--doc)">AI DEVELOPMENT</span>
             <h3>Claude Code</h3>
             <ul class="plain tight" style="margin-top:2px">
+              <li>Implements one tasks.md item at a time, scoped by spec.md and plan.md</li>
               <li>Drafted the concept doc, the README and this deck from a short brief</li>
               <li>Generated the 16-document corpus and the 20-question evaluation set</li>
               <li>Runs the toolchain itself — Maven, npm, Docker, git — and reports failures</li>
-              <li>Next: Spring Boot + Spring AI scaffold, both endpoints, the Angular views</li>
             </ul>
           </div>
           <div class="card">
@@ -638,8 +648,9 @@ tr:last-child td { border-bottom: 0; }
           </div>
         </div>
         <p class="small">
-          AI-assisted, not AI-trusted. The concept, the corpus and this deck came out of that loop, and
-          nothing was committed unread — the same rule applies to the code in Week 2.
+          Spec-driven and AI-assisted, never AI-trusted. Every task traces to a written spec before Claude
+          Code touches it, and nothing is committed unread — the same rule from the concept work through
+          the code in Week 2.
         </p>
       </div>
       <div class="chrome"><span>Ways of working</span><span class="grow"></span><span class="pips"></span><span class="num"></span></div>
