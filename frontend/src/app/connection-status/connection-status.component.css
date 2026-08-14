@@ -1,0 +1,33 @@
+.connection-status {
+  display: inline-block;
+}
+
+.connection-status__label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.connection-status__label--checking {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.connection-status__label--healthy {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.connection-status__label--unreachable {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #9ca3af;
+}
+
+.connection-status__label--degraded {
+  background: #fee2e2;
+  color: #991b1b;
+}

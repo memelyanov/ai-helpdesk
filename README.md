@@ -5,10 +5,11 @@ documents (`.txt` / `.pdf`), grounded in the documents themselves and citing its
 
 **Status: runnable skeleton.** A three-part scaffold now exists and runs — a containerised
 PostgreSQL database with the `vector` extension, a Spring Boot backend exposing a health check,
-and an Angular placeholder frontend — but no PoC functionality (document upload, chunking,
-embedding, retrieval, answer generation) is implemented yet. **Azure OpenAI credentials are not
-required** to run the scaffold; the backend starts and serves with them absent, reporting the
-provider as unconfigured. See [Setup](#setup) below.
+and an Angular placeholder frontend that polls that health check and shows whether the backend is
+reachable — but no PoC functionality (document upload, chunking, embedding, retrieval, answer
+generation) is implemented yet. **Azure OpenAI credentials are not required** to run the scaffold;
+the backend starts and serves with them absent, reporting the provider as unconfigured. See
+[Setup](#setup) below.
 
 Proof of concept for Jira ticket
 [EPMGDPL-3139](https://jiraeu.epam.com/browse/EPMGDPL-3139) — *[Week 1] Java General Task 2 —
@@ -54,14 +55,15 @@ inventing an answer.
 
 | Path | Contents |
 |---|---|
-| `backend/` | Spring Boot 3 service — health check, Azure OpenAI configuration status; no PoC endpoints yet |
-| `frontend/` | Angular 21 placeholder application |
+| `backend/` | Spring Boot 3 service — health check, Azure OpenAI configuration status, CORS-open for the frontend's origin; no PoC endpoints yet |
+| `frontend/` | Angular 21 placeholder application — polls the backend health check and shows a connection-status indicator (healthy / degraded / unreachable) |
 | `db/init/` | Database init script — enables the `vector` extension |
 | `docker-compose.yml` | The database service (backend and frontend run on the host, not in containers) |
 | `.env.example` | Committed template for `.env` — database credentials and the four Azure OpenAI variables |
 | [`docs/poc-concept.md`](docs/poc-concept.md) | Full PoC concept: problem, scenario, architecture, tooling, risks, success criteria, presentation outline |
 | [`sample-data/`](sample-data/README.md) | The synthetic corpus, the evaluation set, and the PDF build script |
 | [`specs/001-project-scaffolding/`](specs/001-project-scaffolding/spec.md) | Spec, plan and contracts for this scaffold, including [`quickstart.md`](specs/001-project-scaffolding/quickstart.md), a full manual validation pass |
+| [`specs/002-frontend-health-wire/`](specs/002-frontend-health-wire/spec.md) | Spec, plan and contracts for the frontend's connection-status indicator, including its own [`quickstart.md`](specs/002-frontend-health-wire/quickstart.md) |
 | `.specify/` | speckit workflow templates |
 
 ## Setup
@@ -111,14 +113,28 @@ Recommended order below is a convenience, **not mandatory** — each part starts
 independently of the others. Database → backend → frontend simply gives a green backend health
 check on the first request instead of a `503` to re-check.
 
+Or start backend and frontend together, each in its own window, with one script:
+
+```powershell
+.\start-dev.ps1            # backend + frontend
+.\start-dev.ps1 -IncludeDb # database + backend + frontend
+```
+
 | Part | Start | Stop | Address | Verify it's working |
 |---|---|---|---|---|
 | Database | `docker compose up -d` | `docker compose down` | `localhost:5432` | `docker compose ps` shows `healthy` |
 | Backend | `backend\mvnw.cmd spring-boot:run` (bash: `backend/mvnw spring-boot:run`) | `Ctrl+C` | `http://localhost:8080` | `Invoke-WebRequest http://localhost:8080/actuator/health` (bash: `curl -i http://localhost:8080/actuator/health`) returns `200` and `"status":"UP"` |
-| Frontend | `npm start` (in `frontend/`) | `Ctrl+C` | `http://localhost:4200` | Open the address — the placeholder page renders with a clean browser console |
+| Frontend | `npm start` (in `frontend/`) | `Ctrl+C` | `http://localhost:4200` | Open the address — within 5s a connection-status indicator shows the backend as healthy (or unreachable/degraded, matching whatever state the backend is actually in), with a clean browser console |
+
+The indicator polls `GET /actuator/health` directly from the browser, which only works because the
+backend explicitly allows that cross-origin request (`management.endpoints.web.cors.*` in
+`backend/src/main/resources/application.yml`, restricted to `http://localhost:4200`) — see
+[`specs/002-frontend-health-wire/contracts/frontend-health-consumption.md`](specs/002-frontend-health-wire/contracts/frontend-health-consumption.md).
 
 Full command-by-command walkthrough, including the database-down and Azure-unconfigured health
-cases: [`specs/001-project-scaffolding/quickstart.md`](specs/001-project-scaffolding/quickstart.md).
+cases: [`specs/001-project-scaffolding/quickstart.md`](specs/001-project-scaffolding/quickstart.md)
+and, for the indicator itself,
+[`specs/002-frontend-health-wire/quickstart.md`](specs/002-frontend-health-wire/quickstart.md).
 
 ### Reset (destructive)
 
@@ -180,6 +196,7 @@ backend/mvnw test -Pverify-ai
 | PowerShell: `backend/mvnw` is "not recognized" | That is the POSIX wrapper script | Use `backend\mvnw.cmd` |
 | PowerShell: `grep` is "not recognized" | `grep` has no PowerShell equivalent by that name | Use `Select-String` |
 | `mvnw test` tries to reach Azure | Should never happen by default — see `-Pverify-ai` above | File a bug; the default suite must never contact Azure |
+| Frontend indicator stuck on "checking" past 5s with the backend confirmed running | CORS not applied, or the backend was started before the CORS config was added | Confirm `management.endpoints.web.cors.allowed-origins` is present in `application.yml` and restart the backend |
 
 ## Sample data
 

@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "frontend", "start"],
       "port": 4200
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "C:\\Epam\\ai-helpdesk\\backend\\mvnw.cmd",
+      "runtimeArgs": ["-f", "C:\\Epam\\ai-helpdesk\\backend\\pom.xml", "spring-boot:run"],
+      "port": 8080
     }
   ]
 }

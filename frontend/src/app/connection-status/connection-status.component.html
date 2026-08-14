@@ -1,0 +1,16 @@
+<div class="connection-status" [attr.data-state]="status()">
+  @switch (status()) {
+    @case ('checking') {
+      <span class="connection-status__label connection-status__label--checking">Checking backend connection…</span>
+    }
+    @case ('healthy') {
+      <span class="connection-status__label connection-status__label--healthy">Backend connected</span>
+    }
+    @case ('unreachable') {
+      <span class="connection-status__label connection-status__label--unreachable">Backend unreachable</span>
+    }
+    @case ('degraded') {
+      <span class="connection-status__label connection-status__label--degraded">Backend reporting a problem</span>
+    }
+  }
+</div>

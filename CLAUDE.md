@@ -1,22 +1,25 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-[specs/001-project-scaffolding/plan.md](specs/001-project-scaffolding/plan.md)
+[specs/002-frontend-health-wire/plan.md](specs/002-frontend-health-wire/plan.md)
 
 Supporting design artifacts for the active feature:
-- [spec.md](specs/001-project-scaffolding/spec.md) — requirements, acceptance scenarios, clarifications
-- [research.md](specs/001-project-scaffolding/research.md) — 11 decisions; versions and Spring property names verified against live registries and artifacts
-- [data-model.md](specs/001-project-scaffolding/data-model.md) — database init state and bound configuration
-- [contracts/health-api.md](specs/001-project-scaffolding/contracts/health-api.md) — health endpoint, three cases
-- [contracts/ai-provider.md](specs/001-project-scaffolding/contracts/ai-provider.md) — Azure OpenAI binding and on-demand verification
-- [contracts/runtime-surface.md](specs/001-project-scaffolding/contracts/runtime-surface.md) — ports, commands, independence
-- [quickstart.md](specs/001-project-scaffolding/quickstart.md) — how to run and verify
+- [spec.md](specs/002-frontend-health-wire/spec.md) — requirements, acceptance scenarios, three-state connection model
+- [research.md](specs/002-frontend-health-wire/research.md) — 6 decisions: HttpClient+signal, 10s poll/3s timeout, Actuator CORS, status-only classification, checking state, HttpTestingController tests
+- [data-model.md](specs/002-frontend-health-wire/data-model.md) — the client-side Connection Status state machine
+- [contracts/frontend-health-consumption.md](specs/002-frontend-health-wire/contracts/frontend-health-consumption.md) — what the frontend reads from `/actuator/health` and the CORS requirement
+- [quickstart.md](specs/002-frontend-health-wire/quickstart.md) — how to see and verify the indicator
+
+Prior feature, still the source of truth for the scaffold itself:
+[specs/001-project-scaffolding/plan.md](specs/001-project-scaffolding/plan.md) — database, backend,
+frontend skeleton; [contracts/health-api.md](specs/001-project-scaffolding/contracts/health-api.md)
+— the health endpoint response shape this feature consumes unchanged.
 
 Governance: [.specify/memory/constitution.md](.specify/memory/constitution.md) v1.3.0 — seven
 principles, Spec-First and TDD first among them; Azure OpenAI is the mandated inference provider.
 
-Two constraints that shape most of the backend design:
-- The backend MUST start with the database down (FR-007) — hence no JPA, no startup migrations.
-- The backend MUST start with Azure credentials absent (FR-019) — hence `spring.ai.model.chat`
-  and `spring.ai.model.embedding` default to `none`, keeping the Spring AI starter inert.
+Two constraints that shape this feature's design:
+- Degraded and unreachable MUST stay distinct indicator states, never collapsed together (FR-003).
+- A hung health request MUST NOT block the indicator from eventually showing unreachable — hence a
+  3-second per-request timeout separate from the 10-second poll interval (FR-007).
 <!-- SPECKIT END -->

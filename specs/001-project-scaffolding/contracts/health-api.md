@@ -11,8 +11,14 @@ do not exist yet, and this feature must not stub them.
 Provided by Spring Boot Actuator with `management.endpoint.health.show-details: always`. Only the
 `health` endpoint is exposed over HTTP.
 
-Two components contribute: `db` (built-in `DataSourceHealthIndicator`) and `azureOpenAi` (custom,
-no network I/O — see [ai-provider.md](ai-provider.md)).
+Two components are specific to this application: `db` (built-in `DataSourceHealthIndicator`) and
+`azureOpenAi` (custom, no network I/O — see [ai-provider.md](ai-provider.md)). Actuator also
+auto-registers its own generic indicators whenever they're on the classpath — observed in practice:
+`diskSpace`, `ping`, and `ssl`. These are stock Actuator behaviour, not something this feature adds
+or configures, and — per the "fields beyond these MUST NOT be asserted" rule below — their presence,
+absence, or shape is explicitly not guaranteed by this contract. The example below shows a captured
+real response (2026-08-14) including them, so implementers aren't surprised by extra top-level
+component keys that neither this document's earlier examples nor `db`/`azureOpenAi` account for.
 
 ### Case A — database reachable, Azure configured
 
@@ -23,18 +29,30 @@ no network I/O — see [ai-provider.md](ai-provider.md)).
 {
   "status": "UP",
   "components": {
-    "db": {
-      "status": "UP",
-      "details": { "database": "PostgreSQL", "validationQuery": "isValid()" }
-    },
     "azureOpenAi": {
       "status": "UP",
       "details": { "configured": true, "endpointConfigured": true, "chatDeploymentConfigured": true }
     },
-    "ping": { "status": "UP" }
+    "db": {
+      "status": "UP",
+      "details": { "database": "PostgreSQL", "validationQuery": "isValid()" }
+    },
+    "diskSpace": {
+      "status": "UP",
+      "details": { "total": 509218910208, "free": 163631063040, "threshold": 10485760, "path": "C:\\Epam\\ai-helpdesk\\backend\\.", "exists": true }
+    },
+    "ping": { "status": "UP" },
+    "ssl": {
+      "status": "UP",
+      "details": { "validChains": [], "invalidChains": [] }
+    }
   }
 }
 ```
+
+*(Captured from a running instance on 2026-08-14; component key order and the presence of
+`diskSpace`/`ssl` reflect the actual Actuator/Spring Boot version installed at capture time, not a
+guarantee — see below.)*
 
 **Guaranteed by contract**:
 
@@ -43,7 +61,9 @@ no network I/O — see [ai-provider.md](ai-provider.md)).
 - `$.components.azureOpenAi.status` is `"UP"`
 - **No field anywhere in the response contains the API key**, in whole or in part
 
-Fields beyond these may vary with the Actuator version and MUST NOT be asserted.
+Fields beyond these — including whether `diskSpace` and `ssl` appear at all, their `details` shape,
+and `$.components` key order — may vary with the Actuator version and the machine it runs on, and
+MUST NOT be asserted.
 
 ### Case B — database unreachable
 
@@ -126,7 +146,10 @@ handling is required or specified beyond composing the two cases already defined
 Case A's `azureOpenAi.details` shows three booleans (`configured`, `endpointConfigured`,
 `chatDeploymentConfigured`); Case B's example shows only `configured` for brevity. This is not a
 contract difference — the same `azureOpenAi` component shape applies regardless of `db`'s status,
-per the "fields beyond these MUST NOT be asserted" rule above.
+per the "fields beyond these MUST NOT be asserted" rule above. Likewise, Cases B and C omit
+`diskSpace` and `ssl` for brevity; they still appear in a real response in those cases exactly as
+they do in Case A — omitting them here does not mean they're absent, and asserting either their
+presence or absence is equally unsupported by this contract.
 
 ### Why 503 for the database but 200 for Azure
 
@@ -142,9 +165,13 @@ still report `UP` here, because the indicator makes no call. Proving credentials
 
 ## Consumers
 
-None in this feature. The frontend makes no backend calls, so there is no CORS configuration and
-no client contract to agree. The consumers here are the backend's own contract tests and a
-developer with a browser or `curl`.
+None in this feature — the frontend made no backend calls when this document was written. That is
+superseded by [002-frontend-health-wire](../../002-frontend-health-wire/spec.md), which polls this
+endpoint from the browser and requires CORS to be enabled for it. See that feature's
+[frontend-health-consumption.md](../../002-frontend-health-wire/contracts/frontend-health-consumption.md)
+for the client contract; the response shape documented above is unchanged by it. Beyond that
+consumer, this endpoint is used by the backend's own contract tests and by a developer with a
+browser or `curl`.
 
 ## Security posture
 
@@ -163,6 +190,10 @@ messages, or responses under any circumstance") and a test asserts it.
 
 - `POST /documents` — ingestion feature
 - `POST /chat` — chat feature
-- Any authentication, rate limiting, or CORS policy
+- Any authentication or rate limiting
+- Any CORS *policy value* (which origins, methods) — that's owned by
+  [002-frontend-health-wire](../../002-frontend-health-wire/contracts/frontend-health-consumption.md),
+  per the Consumers section above; this document only guarantees the response body shape stays the
+  same regardless of what CORS configuration exists
 - Any actuator endpoint other than `health`
 - Any endpoint that calls Azure — the verification is a tagged test, not an HTTP surface
