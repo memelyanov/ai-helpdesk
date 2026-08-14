@@ -79,7 +79,13 @@ contribution and the verification, and because the ingestion feature inherits it
 `apiKey`→`api-key`, `endpoint`→`endpoint`, `chatDeploymentName`→`chat-deployment-name`. One naming
 scheme (camelCase, internal) and one (kebab-case, wire format) describe the same set of values;
 `embeddingDeploymentName` never appears in `missing` because it is excluded from completeness (see
-below) and reported only by the on-demand verification.
+below) and reported only by the on-demand verification. This mapping governs the `missing` list's
+**output** naming only — it says nothing about where each field is *read from*. The chat and
+embedding deployment names live three levels deep in Spring AI's own property tree
+(`chat.options.deployment-name`, `embedding.options.deployment-name`, per ai-provider.md), so the
+binding implementation reads each of the four real paths individually (e.g. `@Value`) rather than
+a single flat `@ConfigurationProperties(prefix = "spring.ai.azure.openai")` class, which cannot
+reach a nested path from a flat field name.
 
 **Completeness rule** (FR-021): complete only when `apiKey`, `endpoint` and `chatDeploymentName`
 are all present and non-blank. Any other combination — including three of four present — is

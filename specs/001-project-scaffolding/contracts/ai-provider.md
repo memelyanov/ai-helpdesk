@@ -27,11 +27,25 @@ startup failure.
 ```yaml
 spring.ai.model.chat: none
 spring.ai.model.embedding: none
+spring.ai.model.image: none
+spring.ai.model.audio.transcription: none
 ```
 
-**This is load-bearing, not tidiness.** `AzureOpenAiChatAutoConfiguration` is
-`@ConditionalOnProperty` on `spring.ai.model.chat=azure-openai` **with `matchIfMissing=true`** —
-verified by disassembling the class — so leaving the property unset runs the auto-configuration.
+**This is load-bearing, not tidiness — and all four gates are required, not just chat and
+embedding.** `spring-ai-autoconfigure-model-azure-openai-1.1.8.jar` registers *four* auto-configuration
+classes (`AzureOpenAiChatAutoConfiguration`, `AzureOpenAiEmbeddingAutoConfiguration`,
+`AzureOpenAiImageAutoConfiguration`, `AzureOpenAiAudioTranscriptionAutoConfiguration`), and every one
+of them is `@ConditionalOnProperty` on its own `spring.ai.model.*` key, each **with
+`matchIfMissing=true`** — verified by disassembling all four classes. Each one that activates
+`@Import`s the same `AzureOpenAiClientBuilderConfiguration`. Gating only `chat` and `embedding` —
+the two this feature discusses — leaves `image` and `audio.transcription` unset, and
+`matchIfMissing=true` activates one of them anyway, importing the client builder configuration
+exactly as if no gate existed at all. **This was caught empirically during implementation**: a
+context-loads test passed in isolation (chat/embedding gated) but failed once run alongside other
+tests in the same suite, because the failure depends on which of the four model auto-configurations
+Spring resolves as unconditioned first — order-dependent, and easy to miss with only two of the four
+gated. All four MUST be set for FR-019 to hold unconditionally.
+
 It delegates to `AzureOpenAiClientBuilderConfiguration`, whose first act when no OpenAI-style key is
 present is:
 

@@ -57,8 +57,10 @@ ingestion, so it is recorded as a follow-up rather than discovered later.
 **This reverses the previous revision, which excluded Spring AI entirely.**
 
 - **Decision**: add `spring-ai-starter-model-azure-openai:1.1.8`, managed by
-  `spring-ai-bom:1.1.8`, and set `spring.ai.model.chat=none` / `spring.ai.model.embedding=none` as
-  the shipped defaults.
+  `spring-ai-bom:1.1.8`, and set `spring.ai.model.chat=none` / `spring.ai.model.embedding=none` /
+  `spring.ai.model.image=none` / `spring.ai.model.audio.transcription=none` as the shipped defaults
+  — **all four**, not just the two this feature discusses; see the implementation note below and
+  [ai-provider.md](contracts/ai-provider.md) for why the other two are equally load-bearing.
 - **Why the reversal**: the previous revision excluded Spring AI on the grounds that the OpenAI
   starter fails startup without an API key. The clarification session changed the requirement —
   FR-018 now mandates binding provider configuration, and FR-022 mandates an on-demand credential
