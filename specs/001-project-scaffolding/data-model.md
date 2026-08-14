@@ -62,6 +62,52 @@ is a connection-liveness probe performed by Actuator's `db` health indicator, wh
 validation query and maps the outcome to a health component. No entity classes, no repositories,
 no migrations.
 
+## Bound configuration (not persisted)
+
+The one structured value this feature introduces is the Azure OpenAI configuration, held in memory
+and never written anywhere. It is included here because its shape determines the health
+contribution and the verification, and because the ingestion feature inherits it unchanged.
+
+| Field | Source variable | Blank permitted | Part of "complete"? |
+|---|---|---|---|
+| `apiKey` | `AZURE_OPEN_AI_KEY` | yes | ✅ required |
+| `endpoint` | `AZURE_OPEN_AI_ENDPOINT` | yes | ✅ required |
+| `chatDeploymentName` | `AZURE_OPEN_AI_DEPLOYMENT_NAME` | yes | ✅ required |
+| `embeddingDeploymentName` | `AZURE_OPEN_AI_EMBEDDING_DEPLOYMENT_NAME` | yes | ❌ excluded (FR-023) |
+
+**Field-name mapping**: the four bound fields above map to the health `missing` list one-to-one —
+`apiKey`→`api-key`, `endpoint`→`endpoint`, `chatDeploymentName`→`chat-deployment-name`. One naming
+scheme (camelCase, internal) and one (kebab-case, wire format) describe the same set of values;
+`embeddingDeploymentName` never appears in `missing` because it is excluded from completeness (see
+below) and reported only by the on-demand verification. This mapping governs the `missing` list's
+**output** naming only — it says nothing about where each field is *read from*. The chat and
+embedding deployment names live three levels deep in Spring AI's own property tree
+(`chat.options.deployment-name`, `embedding.options.deployment-name`, per ai-provider.md), so the
+binding implementation reads each of the four real paths individually (e.g. `@Value`) rather than
+a single flat `@ConfigurationProperties(prefix = "spring.ai.azure.openai")` class, which cannot
+reach a nested path from a flat field name.
+
+**Completeness rule** (FR-021): complete only when `apiKey`, `endpoint` and `chatDeploymentName`
+are all present and non-blank. Any other combination — including three of four present — is
+incomplete. There is no partially-usable state.
+
+`embeddingDeploymentName` is excluded from the rule on purpose: nothing consumes embeddings in this
+feature, and requiring it would make the scaffold unrunnable in the target environment, where that
+deployment does not yet exist.
+
+**Handling rules**: `apiKey` is a secret. It MUST NOT appear in health responses, logs, error
+messages or test output — constitution v1.3.0 requires this and a test asserts it. The other three
+values are not secrets but are still supplied by environment rather than committed.
+
+### Deferred: embedding vector shape
+
+The ingestion feature will store vectors whose dimensionality is fixed by the embedding model
+(`text-embedding-3-small` produces 1536-dimension vectors). That column is **not** created here:
+the dimension is a property of a model chosen by whoever provisions the Azure deployment, and
+committing a `vector(n)` column before the deployment exists would be guessing. Principle V's
+constraint — the same embedding deployment must serve ingestion and query, and changing it
+invalidates the index — makes that guess expensive to get wrong.
+
 ## Validation rules
 
 There are no user-supplied values to validate — this feature accepts no input. The only

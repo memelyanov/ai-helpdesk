@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:aihelpdesk}
+    username: ${POSTGRES_USER:aihelpdesk}
+    password: ${POSTGRES_PASSWORD:aihelpdesk}
+  ai:
+    # Auto-configuration gate — load-bearing, not tidiness. Each of Spring AI's four Azure OpenAI
+    # model auto-configurations (chat, embedding, image, audio transcription) is
+    # @ConditionalOnProperty(havingValue = "azure-openai", matchIfMissing = true) and, whichever one
+    # activates, @Imports AzureOpenAiClientBuilderConfiguration, which fails startup with
+    # "Endpoint must not be empty" when credentials are absent (FR-019). All four MUST be defaulted
+    # to "none" — leaving even one unset re-triggers it via matchIfMissing.
+    model:
+      chat: none
+      embedding: none
+      image: none
+      audio:
+        transcription: none
+    azure:
+      openai:
+        api-key: ${AZURE_OPEN_AI_KEY:}
+        endpoint: ${AZURE_OPEN_AI_ENDPOINT:}
+        chat:
+          options:
+            deployment-name: ${AZURE_OPEN_AI_DEPLOYMENT_NAME:}
+        embedding:
+          options:
+            deployment-name: ${AZURE_OPEN_AI_EMBEDDING_DEPLOYMENT_NAME:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
