@@ -13,6 +13,7 @@ frontend/dist/
 .idea/
 .vscode/
 *.iml
+.history/
 
 # OS
 .DS_Store

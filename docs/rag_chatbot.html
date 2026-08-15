@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern RAG Chatbot UI</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #2c2c2a;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 680px;
+      max-height: 90vh;
+      height: auto;
+      background: #fafaf8;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background: #ffffff;
+      border-right: 1px solid #e5e5e0;
+      display: flex;
+      flex-direction: column;
+      min-height: 680px;
+      max-height: 90vh;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid #e5e5e0;
+    }
+
+    .sidebar-title {
+      margin: 0 0 12px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #2c2c2a;
+      letter-spacing: -0.3px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #eaf3de;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #3b6d11;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #3b6d11;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .files-section {
+      flex: 1;
+      padding: 16px 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .files-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #888780;
+      padding: 0 8px;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .file-item {
+      padding: 12px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      background: #f1efe8;
+      color: #2c2c2a;
+    }
+
+    .file-item.active {
+      background: linear-gradient(135deg, #378add, #4f9ff0);
+      color: white;
+      font-weight: 500;
+    }
+
+    .file-item:not(.active):hover {
+      background: #e5e5e0;
+      border-color: #d3d1c7;
+    }
+
+    .file-icon {
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .file-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid #e5e5e0;
+    }
+
+    .upload-btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1.5px solid #d3d1c7;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #2c2c2a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .upload-btn:hover {
+      border-color: #378add;
+      background: #e6f1fb;
+      color: #185fa5;
+    }
+
+    /* Main Chat Area */
+    .main {
+      display: flex;
+      flex-direction: column;
+      background: #fafaf8;
+      min-height: 680px;
+      max-height: 90vh;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e5e0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafaf8;
+    }
+
+    .chat-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c2c2a;
+    }
+
+    .chat-subtitle {
+      font-size: 13px;
+      color: #888780;
+      margin-top: 4px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .model-badge {
+      padding: 6px 12px;
+      background: #f1efe8;
+      border: 1px solid #e5e5e0;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #888780;
+      font-weight: 500;
+    }
+
+    /* Messages Area */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 200px;
+    }
+
+    .message-group {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .message-group.user {
+      justify-content: flex-end;
+    }
+
+    .message-container {
+      max-width: 65%;
+    }
+
+    .message {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      background: linear-gradient(135deg, #378add, #4f9ff0);
+      color: white;
+      border-radius: 12px 4px 12px 12px;
+    }
+
+    .message.assistant {
+      background: #ffffff;
+      color: #2c2c2a;
+      border: 1px solid #e5e5e0;
+      border-radius: 4px 12px 12px 12px;
+    }
+
+    .sources {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #f9f8f5;
+      border: 1px solid #e5e5e0;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sources-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #888780;
+      letter-spacing: 0.3px;
+    }
+
+    .source-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: #e6f1fb;
+      border: 1px solid #b5d4f4;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #185fa5;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .source-badge i {
+      font-size: 12px;
+    }
+
+    .source-badge:hover {
+      background: #378add;
+      border-color: #378add;
+      color: white;
+    }
+
+    .source-badge.highlighted {
+      background: #378add;
+      border-color: #378add;
+      color: white;
+      box-shadow: 0 0 0 3px rgba(52, 138, 221, 0.2);
+    }
+
+    /* Input Area */
+    .input-area {
+      padding: 20px 24px;
+      border-top: 1px solid #e5e5e0;
+      display: flex;
+      gap: 10px;
+      background: #fafaf8;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid #e5e5e0;
+      border-radius: 12px;
+      padding: 0 16px;
+      transition: all 0.2s ease;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: #378add;
+      box-shadow: 0 0 0 3px #e6f1fb;
+    }
+
+    .input-wrapper input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px 0;
+      font-size: 14px;
+      color: #2c2c2a;
+      outline: none;
+    }
+
+    .input-wrapper input::placeholder {
+      color: #b4b2a9;
+    }
+
+    .send-btn {
+      padding: 10px 16px;
+      background: #378add;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+
+    .send-btn:hover {
+      background: #2c7dd8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(52, 138, 221, 0.3);
+    }
+
+    .send-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Scrollbar styling */
+    .files-section::-webkit-scrollbar,
+    .messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .files-section::-webkit-scrollbar-track,
+    .messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .files-section::-webkit-scrollbar-thumb,
+    .messages::-webkit-scrollbar-thumb {
+      background: #d3d1c7;
+      border-radius: 3px;
+    }
+
+    .files-section::-webkit-scrollbar-thumb:hover,
+    .messages::-webkit-scrollbar-thumb:hover {
+      background: #888780;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .message {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">Knowledge Base</h2>
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        Backend ready
+      </div>
+    </div>
+
+    <div class="files-section">
+      <div class="files-label">Documents</div>
+      
+      <div class="file-item active">
+        <i class="ti ti-file-pdf file-icon"></i>
+        <div class="file-name">company_handbook.pdf</div>
+      </div>
+      
+      <div class="file-item">
+        <i class="ti ti-file-text file-icon"></i>
+        <div class="file-name">api_reference.txt</div>
+      </div>
+      
+      <div class="file-item">
+        <i class="ti ti-file-pdf file-icon"></i>
+        <div class="file-name">product_specs.pdf</div>
+      </div>
+      
+      <div class="file-item">
+        <i class="ti ti-file-text file-icon"></i>
+        <div class="file-name">faq.txt</div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="upload-btn">
+        <i class="ti ti-cloud-upload"></i>
+        Upload docs
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Chat Area -->
+  <div class="main">
+    <div class="chat-header">
+      <div>
+        <h1 class="chat-title">Ask me anything</h1>
+        <p class="chat-subtitle">Chat powered by your documents</p>
+      </div>
+      <div class="header-right">
+        <div class="model-badge">GPT-4 based RAG</div>
+      </div>
+    </div>
+
+    <div class="messages">
+      <div class="message-group user">
+        <div class="message user">
+          What are the key features mentioned in the product specs?
+        </div>
+      </div>
+
+      <div class="message-group">
+        <div class="message-container">
+          <div class="message assistant">
+            According to the product specs, the key features include: real-time collaboration, advanced security protocols, cloud integration, and customizable workflows. These are designed to enhance team productivity and data protection.
+          </div>
+          <div class="sources">
+            <div class="sources-label">Sources:</div>
+            <div class="source-badges">
+              <span class="source-badge" data-file="product_specs.pdf">
+                <i class="ti ti-file-pdf"></i> product_specs.pdf
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="message-group user">
+        <div class="message user">
+          How do I set up OAuth authentication?
+        </div>
+      </div>
+
+      <div class="message-group">
+        <div class="message-container">
+          <div class="message assistant">
+            Based on the API reference, OAuth setup involves: (1) Register your application and obtain client credentials, (2) Configure the authorization endpoint, (3) Implement the token exchange flow, and (4) Store refresh tokens securely. The detailed steps are in Section 4.2 of the API documentation.
+          </div>
+          <div class="sources">
+            <div class="sources-label">Sources:</div>
+            <div class="source-badges">
+              <span class="source-badge" data-file="api_reference.txt">
+                <i class="ti ti-file-text"></i> api_reference.txt
+              </span>
+              <span class="source-badge" data-file="company_handbook.pdf">
+                <i class="ti ti-file-pdf"></i> company_handbook.pdf
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrapper">
+        <input type="text" placeholder="Ask a question about your documents...">
+      </div>
+      <button class="send-btn">
+        <i class="ti ti-send" style="font-size: 16px;"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Add interactivity
+  const fileItems = document.querySelectorAll('.file-item');
+  const sendBtn = document.querySelector('.send-btn');
+  const inputField = document.querySelector('.input-wrapper input');
+  const uploadBtn = document.querySelector('.upload-btn');
+  const sourceBadges = document.querySelectorAll('.source-badge');
+
+  // Get file name from file item
+  function getFileNameFromItem(item) {
+    return item.querySelector('.file-name').textContent.trim();
+  }
+
+  // File selection
+  fileItems.forEach(item => {
+    item.addEventListener('click', () => {
+      fileItems.forEach(f => f.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  // Source badge interaction
+  sourceBadges.forEach(badge => {
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      const fileName = badge.dataset.file;
+      
+      // Clear all highlights
+      sourceBadges.forEach(b => b.classList.remove('highlighted'));
+      fileItems.forEach(f => f.classList.remove('active'));
+      
+      // Highlight the clicked badge
+      badge.classList.add('highlighted');
+      
+      // Find and highlight the corresponding file
+      fileItems.forEach(item => {
+        if (getFileNameFromItem(item) === fileName) {
+          item.classList.add('active');
+          // Scroll into view
+          item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
+    });
+
+    // Add hover tooltip
+    badge.title = `Click to view ${badge.dataset.file}`;
+  });
+
+  // Send message
+  sendBtn.addEventListener('click', () => {
+    if (inputField.value.trim()) {
+      console.log('Message sent:', inputField.value);
+      inputField.value = '';
+    }
+  });
+
+  // Send on Enter key
+  inputField.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendBtn.click();
+    }
+  });
+
+  // Upload button
+  uploadBtn.addEventListener('click', () => {
+    alert('Upload dialog would open here');
+  });
+
+  // Clear highlights when clicking elsewhere
+  document.addEventListener('click', () => {
+    sourceBadges.forEach(b => b.classList.remove('highlighted'));
+  });
+</script>
+
+</body>
+</html>

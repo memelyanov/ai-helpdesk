@@ -7,6 +7,7 @@
 	"settings": {
 		"airun.settings": {
 			"workspaceId": "5d77028a-fac4-46d1-a8db-2d9c2ce3ecbe"
-		}
+		},
+		"java.compile.nullAnalysis.mode": "automatic"
 	}
 }
