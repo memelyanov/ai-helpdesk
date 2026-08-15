@@ -3,6 +3,13 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:aihelpdesk}
     username: ${POSTGRES_USER:aihelpdesk}
     password: ${POSTGRES_PASSWORD:aihelpdesk}
+  servlet:
+    multipart:
+      # Deliberately above FR-003's 20 MB business limit (DocumentController enforces that number
+      # itself, producing a consistent `invalid_file` response). This is only a container-level
+      # safety net so an absurdly large request is rejected before Spring even buffers it fully.
+      max-file-size: 25MB
+      max-request-size: 25MB
   ai:
     # Auto-configuration gate — load-bearing, not tidiness. Each of Spring AI's four Azure OpenAI
     # model auto-configurations (chat, embedding, image, audio transcription) is

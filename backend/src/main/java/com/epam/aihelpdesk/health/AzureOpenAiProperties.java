@@ -65,6 +65,17 @@ public class AzureOpenAiProperties {
     }
 
     /**
+     * Complete only when apiKey, endpoint and embeddingDeploymentName are all present and
+     * non-blank — a distinct check from {@link #isComplete()}, which intentionally excludes the
+     * embedding deployment name and checks the chat deployment name instead (feature 001, FR-023).
+     * Ingestion (feature 004) needs its own gate here: a chat-only configuration must not be
+     * treated as ready for embedding calls, and vice versa (research Decision 6).
+     */
+    public boolean isEmbeddingComplete() {
+        return !blank(apiKey) && !blank(endpoint) && !blank(embeddingDeploymentName);
+    }
+
+    /**
      * Names of the required settings (api-key, endpoint, chat-deployment-name) that are currently
      * blank, in the wire-format naming used by the health response.
      */

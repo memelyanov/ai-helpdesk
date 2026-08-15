@@ -1,34 +1,39 @@
 <!--
 SYNC IMPACT REPORT
 =================
-Version Change: 1.3.0 → 1.4.0 (MINOR: added mandatory Code Language Standard requirement)
-Status: Amended — English-only code and documentation requirement added
+Version Change: 1.4.0 → 1.4.1 (PATCH: wording fix, no principle or requirement redefinition)
+Status: Amended — Error Handling & Logging's status-code wording generalized
 Last Amendment: 2026-08-15
 
 **Principles Established/Updated:**
 - I–VII: All core principles — UNCHANGED
-- NEW: "Code & Documentation Language Standard" added to Development & Integration Requirements
+- Development & Integration Requirements → Error Handling & Logging: wording fix only (see below)
 
-**Rationale for Version Bump (MINOR):**
-A new, substantial development requirement has been added: all code, comments, documentation,
-commit messages, and PR descriptions must be in English. This is not a principle redefinition but
-an expansion of the development discipline section. It affects code review procedures, developer
-onboarding, and team communication standards. This warrants a MINOR bump.
+**Rationale for Version Bump (PATCH):**
+The Error Handling & Logging section literally required every wrapped external-call failure to
+"return a 500 error." Feature 004 (Document Ingestion Endpoint) was designed and approved with a
+deliberate `400`/`503` split (never `500`) so a caller can tell "bad input" from "processing
+failed" by status code alone — a design goal the literal "500" text never anticipated. This is a
+wording correction to match a requirement (a caller-distinguishable, feature-defined explicit error
+status) already in force, not a new constraint or a principle redefinition — a PATCH per the
+Amendment Procedure's own definition ("clarifications, wording fixes... non-semantic refinements").
 
 **Sections Updated:**
-- Development & Integration Requirements → new "Code & Documentation Language Standard"
-  subsection inserted after AI Provider Configuration
-- Governance → Compliance Review updated to include language standard checks in PRs
+- Development & Integration Requirements → Error Handling & Logging: "return a 500 error" →
+  "return an explicit error status code... a `5xx` status... when processing failed, and a `4xx`
+  status... when the input itself was invalid; a feature's contract MUST state its own exact
+  mapping"
 
 **Dependent Artifacts:**
-- ✅ .specify/templates/plan-template.md — verified: no language-specific constraints, no edits required
-- ✅ .specify/templates/spec-template.md — verified: no language-specific constraints, no edits required
-- ✅ .specify/templates/tasks-template.md — verified: no language-specific constraints, no edits required
-- ✅ CLAUDE.md (runtime guidance) — remains as the operational layer; language standard
-  enforcement delegated to PR review process documented in constitution
+- ✅ .specify/templates/plan-template.md — verified: no status-code-specific constraints, no edits required
+- ✅ .specify/templates/spec-template.md — verified: no status-code-specific constraints, no edits required
+- ✅ .specify/templates/tasks-template.md — verified: no status-code-specific constraints, no edits required
+- ✅ specs/004-document-ingestion-endpoint/ — already designed against the corrected wording
+  (research.md Decision 8, contracts/ingestion-api-contract.md); no changes required, this
+  amendment reconciles the constitution's text with that already-approved design
 
-**Prior Amendment (v1.3.0):**
-- Mandated LLM provider switched to Azure OpenAI (2026-08-13)
+**Prior Amendment (v1.4.0):**
+- Added mandatory Code & Documentation Language Standard (2026-08-15)
 
 **Follow-up TODOs:**
 - Provision the Azure embedding deployment and set `AZURE_OPEN_AI_EMBEDDING_DEPLOYMENT_NAME`;
@@ -228,7 +233,7 @@ communication in files (all English). Violations are flagged in PR review before
 
 ### Error Handling & Logging
 
-- All external API calls (Azure OpenAI, pgvector) MUST be wrapped in try-catch; failures MUST log stack traces and return a 500 error with a user-friendly message.
+- All external API calls (Azure OpenAI, pgvector) MUST be wrapped in try-catch; failures MUST log stack traces and return an explicit error status code with a user-friendly message — a `5xx` status (e.g. `503`) when the input was valid but processing failed (the provider is unreachable, unconfigured, or the database write failed), and a `4xx` status (e.g. `400`) when the input itself was invalid; a feature's contract MUST state its own exact mapping, and the caller MUST be able to tell the two cases apart from the status code alone.
 - Structured logging MUST be enabled: log each embedding request, retrieval query, and LLM call with request/response summaries for debugging.
 - API keys MUST NOT appear in logs, error messages, or responses under any circumstance.
 - Failed document uploads MUST not partially index; rollback is mandatory.
@@ -264,4 +269,4 @@ See [`CLAUDE.md`](CLAUDE.md) in the repository root for ongoing development prac
 
 ---
 
-**Version**: 1.4.0 | **Ratified**: 2026-08-13 | **Last Amended**: 2026-08-15
+**Version**: 1.4.1 | **Ratified**: 2026-08-13 | **Last Amended**: 2026-08-15
