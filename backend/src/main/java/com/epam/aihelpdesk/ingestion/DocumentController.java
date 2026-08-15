@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,10 +44,13 @@ public class DocumentController {
 
     private final IngestionService ingestionService;
     private final DocumentQueryRepository documentQueryRepository;
+    private final DocumentRepository documentRepository;
 
-    public DocumentController(IngestionService ingestionService, DocumentQueryRepository documentQueryRepository) {
+    public DocumentController(IngestionService ingestionService, DocumentQueryRepository documentQueryRepository,
+            DocumentRepository documentRepository) {
         this.ingestionService = ingestionService;
         this.documentQueryRepository = documentQueryRepository;
+        this.documentRepository = documentRepository;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -86,6 +90,25 @@ public class DocumentController {
                 .contentType(MediaType.parseMediaType(content.contentType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
                 .body(content.content());
+    }
+
+    /**
+     * {@code DELETE /documents/{id}} — permanently deletes a document and every chunk derived from
+     * it, via feature 003's {@code ON DELETE CASCADE} (FR-001–FR-002, FR-011). A malformed id, a
+     * well-formed-but-nonexistent id, and an already-deleted id all resolve to the identical
+     * {@link DocumentNotFoundException} (FR-005/FR-008, research Decision 3/4) — reusing the same
+     * {@link #parseId} helper the download endpoint already uses. An unexpected server-side failure
+     * while deleting an existing document surfaces as {@link DocumentDeletionException} (FR-010),
+     * never a partial deletion and never confused with the not-found outcome.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable("id") String id) {
+        UUID documentId = parseId(id);
+        boolean deleted = documentRepository.deleteById(documentId);
+        if (!deleted) {
+            throw new DocumentNotFoundException("No document exists with the given id.");
+        }
+        return ResponseEntity.noContent().build();
     }
 
     private static UUID parseId(String id) {

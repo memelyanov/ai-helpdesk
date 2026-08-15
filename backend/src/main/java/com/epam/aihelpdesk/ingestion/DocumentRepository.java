@@ -30,6 +30,7 @@ public class DocumentRepository {
             "INSERT INTO documents (filename, content_type, content) VALUES (?, ?, ?) RETURNING id";
     private static final String INSERT_CHUNK = "INSERT INTO chunks "
             + "(document_id, chunk_id, source_filename, page_number, text, embedding) VALUES (?, ?, ?, ?, ?, ?)";
+    private static final String DELETE_DOCUMENT = "DELETE FROM documents WHERE id = ?";
 
     private final JdbcTemplate jdbcTemplate;
     private final TransactionTemplate transactionTemplate;
@@ -72,5 +73,35 @@ public class DocumentRepository {
         ChunkDraft chunk = embeddedChunk.chunk();
         jdbcTemplate.update(INSERT_CHUNK, documentId, chunk.chunkId(), sourceFilename, chunk.pageNumber(),
                 chunk.text(), new PGvector(embeddedChunk.embedding()));
+    }
+
+    /**
+     * One {@code DELETE FROM documents WHERE id = ?} statement — its own affected-row count is the
+     * only signal needed to decide "deleted" from "nothing to delete" (research Decision 4): no
+     * prior existence check runs first, so there is no check-then-act race window. Every one of
+     * {@code id}'s {@code chunks} rows is removed in the same statement via feature 003's
+     * {@code ON DELETE CASCADE} (FR-011) — no explicit {@link TransactionTemplate} is needed, since a
+     * single statement (cascading actions included) is already atomic in PostgreSQL (research
+     * Decision 5).
+     *
+     * @return {@code true} if exactly one row (and its cascaded chunks) was deleted; {@code false} if
+     *         no row matched {@code id} — it never existed or was already deleted (FR-008)
+     * @throws DocumentDeletionException {@code deletion_failed} if the statement fails unexpectedly —
+     *                                    no row is deleted (FR-010, statement-level atomicity)
+     */
+    public boolean deleteById(UUID id) {
+        try {
+            int rowsAffected = jdbcTemplate.update(DELETE_DOCUMENT, id);
+            boolean deleted = rowsAffected == 1;
+            if (deleted) {
+                log.info("document delete succeeded: documentId={}", id);
+            } else {
+                log.info("document delete found nothing to delete: documentId={}", id);
+            }
+            return deleted;
+        } catch (RuntimeException e) {
+            log.warn("document delete failed: documentId={}, cause={}", id, e.toString());
+            throw new DocumentDeletionException("Failed to delete the document.", e);
+        }
     }
 }

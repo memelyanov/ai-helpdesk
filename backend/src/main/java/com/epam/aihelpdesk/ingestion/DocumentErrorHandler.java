@@ -17,9 +17,12 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
  * <p>{@link InvalidDocumentException} → {@code 400} (the input itself was invalid);
  * {@link IngestionProcessingException} → {@code 503} (the input was valid, processing failed);
  * {@link DocumentNotFoundException} → {@code 404} (no stored document matches the requested id,
- * research Decision 4). A caller can tell these three categories apart from the status code alone,
- * with no need to parse {@code message}
- * (contracts/ingestion-api-contract.md, contracts/document-query-api-contract.md).
+ * research Decision 4); {@link DocumentDeletionException} → {@code 503} (the id names an existing
+ * document, but an unexpected server-side failure prevented its deletion, research Decision 6). A
+ * caller can tell these categories apart from the status code alone, with no need to parse
+ * {@code message}
+ * (contracts/ingestion-api-contract.md, contracts/document-query-api-contract.md,
+ * contracts/document-delete-api-contract.md).
  *
  * <p>{@link MissingServletRequestPartException} — Spring's own signal for a request with no {@code
  * file} part at all — is folded into the same {@code 400 invalid_file} outcome as a malformed
@@ -49,6 +52,12 @@ public class DocumentErrorHandler {
     public ResponseEntity<DocumentErrorResponse> handleDocumentNotFound(DocumentNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new DocumentErrorResponse("document_not_found", exception.getMessage()));
+    }
+
+    @ExceptionHandler(DocumentDeletionException.class)
+    public ResponseEntity<DocumentErrorResponse> handleDocumentDeletionFailure(DocumentDeletionException exception) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new DocumentErrorResponse("deletion_failed", exception.getMessage()));
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
