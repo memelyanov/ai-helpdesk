@@ -175,9 +175,17 @@ The PoC is considered successful when:
 ## 10. Next Steps
 
 1. ~~Assemble the synthetic document corpus and the evaluation CSV.~~ **Done** — see `sample-data/`.
-2. Start pgvector in Docker; scaffold the Spring Boot application locally against it.
-3. Implement the ingestion endpoint (Tika → chunking → Azure OpenAI embeddings → pgvector).
-4. Implement the chat endpoint (retrieve → augment → Azure OpenAI chat completion → answer + sources).
-5. Build the Angular 21 frontend — chat view and upload view against the REST API.
-6. Run the evaluation set, tune chunk size and K.
-7. Present at the weekly update.
+2. ~~Start pgvector in Docker; scaffold the Spring Boot application locally against it.~~ **Done** —
+   see `specs/001-project-scaffolding/`.
+3. ~~Wire the Angular frontend to the backend's health check (connection-status indicator).~~
+   **Done** — see `specs/002-frontend-health-wire/`.
+4. ~~Design the `documents`/`chunks` database schema in pgvector (original-document storage,
+   chunk vector + text + metadata, cascade delete, similarity-search traceability back to the
+   source document).~~ **Done** — see `specs/003-document-vector-schema/`.
+5. Implement the ingestion endpoint (Tika → chunking → Azure OpenAI embeddings → write into the
+   schema from step 4).
+6. Implement the chat endpoint (retrieve → augment → Azure OpenAI chat completion → answer + sources).
+7. Build the Angular 21 chat view and document upload view against the REST API (the frontend so
+   far only has the connection-status indicator from step 3, not these PoC-facing views).
+8. Run the evaluation set, tune chunk size and K.
+9. Present at the weekly update.
