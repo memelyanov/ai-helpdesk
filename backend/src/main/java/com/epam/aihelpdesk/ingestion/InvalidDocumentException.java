@@ -3,7 +3,7 @@ package com.epam.aihelpdesk.ingestion;
 /**
  * The upload itself was the problem — the caller must change the file before retrying, retrying
  * the identical upload will not help (FR-011's "input itself was invalid" category). Maps to
- * {@code 400 Bad Request} via {@link IngestionErrorHandler}. Valid {@code errorCode} values:
+ * {@code 400 Bad Request} via {@link DocumentErrorHandler}. Valid {@code errorCode} values:
  *
  * <ul>
  *   <li>{@code unsupported_type} — content is neither {@code .txt} nor {@code .pdf} (FR-002).</li>

@@ -1,11 +1,17 @@
 package com.epam.aihelpdesk.ingestion;
 
 import com.epam.aihelpdesk.ingestion.dto.DocumentIngestionResponse;
+import com.epam.aihelpdesk.ingestion.dto.DocumentSummaryResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,12 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * {@code POST /documents} — accepts one {@code multipart/form-data} upload, validates it, and
- * delegates to {@link IngestionService}. Request-level validation (FR-003: empty, oversized, or a
- * malformed request — no/duplicate {@code file} part, no filename) runs here, before any content is
- * inspected, and always before the type/parse checks {@link TextExtractor} performs (FR-002/005) —
- * the exact order spec.md's Edge Cases mandates: an oversized file that is also an unsupported type
- * is reported {@code invalid_file}, never {@code unsupported_type}.
+ * The {@code /documents} resource: {@code POST /documents} (feature 004) accepts a
+ * {@code multipart/form-data} upload, validates it, and delegates to {@link IngestionService};
+ * {@code GET /documents} (this feature) lists every ingested document; and
+ * {@code GET /documents/{id}/content} (this feature) returns a document's original file bytes.
+ * Request-level validation for {@code POST} (FR-003: empty, oversized, or a malformed request —
+ * no/duplicate {@code file} part, no filename) runs here, before any content is inspected, and
+ * always before the type/parse checks {@link TextExtractor} performs (FR-002/005) — the exact order
+ * spec.md's Edge Cases mandates: an oversized file that is also an unsupported type is reported
+ * {@code invalid_file}, never {@code unsupported_type}.
  *
  * <p>{@code file} is bound as a {@code List<MultipartFile>}, not a single {@link MultipartFile},
  * specifically so "more than one {@code file} part" and "no {@code file} part" are both ordinary
@@ -33,9 +42,11 @@ public class DocumentController {
     static final long MAX_FILE_SIZE_BYTES = 20L * 1024 * 1024;
 
     private final IngestionService ingestionService;
+    private final DocumentQueryRepository documentQueryRepository;
 
-    public DocumentController(IngestionService ingestionService) {
+    public DocumentController(IngestionService ingestionService, DocumentQueryRepository documentQueryRepository) {
         this.ingestionService = ingestionService;
+        this.documentQueryRepository = documentQueryRepository;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -45,6 +56,44 @@ public class DocumentController {
         byte[] content = readBytes(file);
         DocumentIngestionResponse response = ingestionService.ingest(file.getOriginalFilename(), content);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * {@code GET /documents} — every ingested document, newest-first, zero-chunk documents
+     * included (FR-001–FR-006). Always {@code 200 OK}; an empty corpus returns {@code 200} with
+     * {@code []}, never an error (FR-006).
+     */
+    @GetMapping
+    public ResponseEntity<List<DocumentSummaryResponse>> list() {
+        return ResponseEntity.ok(documentQueryRepository.findAll());
+    }
+
+    /**
+     * {@code GET /documents/{id}/content} — a document's original file bytes, byte-for-byte
+     * (FR-007–FR-011). {@code id} is bound as {@code String}, not {@link UUID}, so a malformed id
+     * never surfaces Spring's own {@code MethodArgumentTypeMismatchException}; a malformed id and a
+     * well-formed-but-nonexistent id both resolve to the identical {@link DocumentNotFoundException}
+     * (research Decision 4).
+     */
+    @GetMapping("/{id}/content")
+    public ResponseEntity<byte[]> download(@PathVariable("id") String id) {
+        UUID documentId = parseId(id);
+        DocumentContent content = documentQueryRepository.findContentById(documentId)
+                .orElseThrow(() -> new DocumentNotFoundException("No document exists with the given id."));
+        ContentDisposition disposition =
+                ContentDisposition.attachment().filename(content.filename()).build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(content.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .body(content.content());
+    }
+
+    private static UUID parseId(String id) {
+        try {
+            return UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            throw new DocumentNotFoundException("No document exists with the given id.");
+        }
     }
 
     private MultipartFile validate(List<MultipartFile> files) {
