@@ -1,55 +1,34 @@
 <!--
 SYNC IMPACT REPORT
 =================
-Version Change: 1.2.1 → 1.3.0 (MINOR: mandated LLM provider switched to Azure OpenAI)
-Status: Amended — provider substitution ratified, configuration contract added
-Last Amendment: 2026-08-13
+Version Change: 1.3.0 → 1.4.0 (MINOR: added mandatory Code Language Standard requirement)
+Status: Amended — English-only code and documentation requirement added
+Last Amendment: 2026-08-15
 
 **Principles Established/Updated:**
-- I. Spec-First (Documentation-First) — UNCHANGED
-- II. Test-Driven Development (Mandatory) — UNCHANGED
-- III. Grounded Answers (RAG-First) — UNCHANGED
-- IV. No Hallucination (Context Adherence) — UNCHANGED
-- V. Semantic Understanding (Meaning-Based Retrieval) — AMENDED (embedding provider is now an
-  Azure OpenAI deployment of `text-embedding-3-small`; the retrieval obligation is unchanged)
-- VI. Data Sovereignty (Self-Hosted Vectors) — AMENDED (strengthened: Azure OpenAI's enterprise
-  terms materially improve the posture this principle exists to protect; the production gate is
-  restated rather than removed)
-- VII. Quality Validation (≥80% Retrieval Accuracy) — UNCHANGED
+- I–VII: All core principles — UNCHANGED
+- NEW: "Code & Documentation Language Standard" added to Development & Integration Requirements
 
 **Rationale for Version Bump (MINOR):**
-The mandated inference provider changes from the OpenAI API to Azure OpenAI. No principle is
-removed, and none is redefined in what it obliges — Principles V and VI keep their obligations and
-change only the named provider that satisfies them. The amendment materially expands guidance: a
-configuration contract, a one-model-per-deployment constraint, and an explicit deployment-name
-indirection that did not previously exist.
-
-MAJOR was considered and rejected. This constitution reserves MAJOR for "backward incompatible
-principle removal or redefinition (e.g., switching from RAG to fine-tuning)" — a change to what
-the project believes. A provider substitution that leaves every principle's obligation intact is a
-change to how those beliefs are implemented. The change is backward-incompatible for code, but no
-implementation exists yet: the repository is at the scaffolding-specification stage, which is
-precisely why this amendment is being made now rather than later.
+A new, substantial development requirement has been added: all code, comments, documentation,
+commit messages, and PR descriptions must be in English. This is not a principle redefinition but
+an expansion of the development discipline section. It affects code review procedures, developer
+onboarding, and team communication standards. This warrants a MINOR bump.
 
 **Sections Updated:**
-- Core Principles → V (embedding provider), VI (data sovereignty posture)
-- Technology Stack & Tooling Requirements → LLM & Embeddings row rewritten
-- Development & Integration Requirements → new "AI Provider Configuration" subsection; provider
-  references updated in Chunking & Embedding Strategy, Ingestion Pipeline, Query Pipeline, and
-  Error Handling & Logging
-- Governance → Compliance Review gains a credential-handling check
+- Development & Integration Requirements → new "Code & Documentation Language Standard"
+  subsection inserted after AI Provider Configuration
+- Governance → Compliance Review updated to include language standard checks in PRs
 
 **Dependent Artifacts:**
-- ✅ README.md — stack table and ingest/ask flow updated
-- ✅ docs/poc-concept.md — stack and integrations updated, with a dated amendment note preserving
-  the original decision record rather than overwriting it silently
-- ✅ .specify/templates/*.md — verified: contain no provider references, no edits required
-- ⚠ docs/demo-deck.html — still states OpenAI. This is a delivered presentation from the Week 1
-  concept session; it is a record of what was presented on that date, not a living document.
-  Left unchanged deliberately. Update it only if the deck will be re-presented.
-- ⚠ specs/001-project-scaffolding/plan.md, research.md, contracts/, quickstart.md — predate both
-  this amendment and the Azure clarifications in spec.md. Research Decision 2 directly contradicts
-  the current spec. Regenerate with `/speckit-plan` before implementation.
+- ✅ .specify/templates/plan-template.md — verified: no language-specific constraints, no edits required
+- ✅ .specify/templates/spec-template.md — verified: no language-specific constraints, no edits required
+- ✅ .specify/templates/tasks-template.md — verified: no language-specific constraints, no edits required
+- ✅ CLAUDE.md (runtime guidance) — remains as the operational layer; language standard
+  enforcement delegated to PR review process documented in constitution
+
+**Prior Amendment (v1.3.0):**
+- Mandated LLM provider switched to Azure OpenAI (2026-08-13)
 
 **Follow-up TODOs:**
 - Provision the Azure embedding deployment and set `AZURE_OPEN_AI_EMBEDDING_DEPLOYMENT_NAME`;
@@ -195,6 +174,33 @@ The system MUST achieve at least **80% precision** on a curated evaluation set: 
 - No API key, endpoint or deployment name may be committed. A committed template
   (`.env.example`) MUST document every variable with non-secret placeholders.
 
+### Code & Documentation Language Standard
+
+**All text recorded in the repository MUST be in English.** This requirement applies uniformly to:
+
+- **Source code**: Variable names, function names, class names, and all identifiers MUST be in English.
+- **Comments and docstrings**: All inline comments, block comments, JavaDoc/JSDoc, and code documentation
+  MUST be in English.
+- **Commit messages**: Every git commit message MUST be in English; `Co-Authored-By` footers and
+  commit body MUST use English.
+- **Pull request descriptions and comments**: PR titles, descriptions, and review comments MUST be in
+  English.
+- **Configuration and documentation files**: README, specification files, design docs, runbooks,
+  and any `.md`, `.yaml`, `.json`, or `.xml` documentation MUST be in English.
+- **Log output and error messages**: Structured logging, error messages returned to API consumers,
+  and debug output MUST be in English for consistency and tooling compatibility.
+
+**Rationale**: A distributed team across multiple geographies requires a single working language for
+the codebase. English is the lingua franca of software development; enforcing it ensures:
+- Code review is accessible to all team members regardless of native language.
+- Search (grep, IDE search, documentation tools) returns results without language filtering.
+- Future maintenance, handovers, and onboarding are not blocked by language barriers.
+- Integration with external tools (CI/CD, monitoring, community OSS) assumes English identifiers and
+  messages.
+
+This requirement applies equally to communication in chat (user may write in any language) and
+communication in files (all English). Violations are flagged in PR review before merge.
+
 ### Chunking & Embedding Strategy
 
 - Documents MUST be split into chunks of 500–1000 tokens with 10–15% overlap to maintain semantic self-containment.
@@ -248,6 +254,7 @@ This constitution supersedes all prior informal guidance. Amendments MUST be doc
 - Every PR that changes behaviour MUST link the `spec.md` it implements, and MUST include any spec amendment the change implies (Spec-First principle enforcement).
 - All PRs MUST include proof of test coverage and passing tests (TDD principle enforcement).
 - All PRs MUST be checked for committed credentials; any API key, endpoint or deployment name found in tracked files blocks the merge.
+- All PRs MUST be audited for language compliance: code identifiers, comments, commit messages, and PR descriptions MUST be in English (Code & Documentation Language Standard enforcement).
 - The evaluation set (≥80% retrieval accuracy) MUST be run and reported in the PR before merging to main.
 - Any deviation from the mandated tech stack MUST be approved as a constitution amendment, not a casual code choice.
 
@@ -257,4 +264,4 @@ See [`CLAUDE.md`](CLAUDE.md) in the repository root for ongoing development prac
 
 ---
 
-**Version**: 1.3.0 | **Ratified**: 2026-08-13 | **Last Amended**: 2026-08-13
+**Version**: 1.4.0 | **Ratified**: 2026-08-13 | **Last Amended**: 2026-08-15
