@@ -57,13 +57,14 @@ inventing an answer.
 |---|---|
 | `backend/` | Spring Boot 3 service — health check, Azure OpenAI configuration status, CORS-open for the frontend's origin; no PoC endpoints yet |
 | `frontend/` | Angular 21 placeholder application — polls the backend health check and shows a connection-status indicator (healthy / degraded / unreachable) |
-| `db/init/` | Database init script — enables the `vector` extension |
+| `db/init/` | Database init scripts — enable the `vector` extension, then create the `documents` and `chunks` tables (see [Database schema](#database-schema-dbinitsql) below) |
 | `docker-compose.yml` | The database service (backend and frontend run on the host, not in containers) |
 | `.env.example` | Committed template for `.env` — database credentials and the four Azure OpenAI variables |
 | [`docs/poc-concept.md`](docs/poc-concept.md) | Full PoC concept: problem, scenario, architecture, tooling, risks, success criteria, presentation outline |
 | [`sample-data/`](sample-data/README.md) | The synthetic corpus, the evaluation set, and the PDF build script |
 | [`specs/001-project-scaffolding/`](specs/001-project-scaffolding/spec.md) | Spec, plan and contracts for this scaffold, including [`quickstart.md`](specs/001-project-scaffolding/quickstart.md), a full manual validation pass |
 | [`specs/002-frontend-health-wire/`](specs/002-frontend-health-wire/spec.md) | Spec, plan and contracts for the frontend's connection-status indicator, including its own [`quickstart.md`](specs/002-frontend-health-wire/quickstart.md) |
+| [`specs/003-document-vector-schema/`](specs/003-document-vector-schema/spec.md) | Spec, plan and contracts for the `documents`/`chunks` database schema, including its own [`quickstart.md`](specs/003-document-vector-schema/quickstart.md) |
 | `.specify/` | speckit workflow templates |
 
 ## Setup
@@ -136,6 +137,43 @@ cases: [`specs/001-project-scaffolding/quickstart.md`](specs/001-project-scaffol
 and, for the indicator itself,
 [`specs/002-frontend-health-wire/quickstart.md`](specs/002-frontend-health-wire/quickstart.md).
 
+### Database schema (`db/init/*.sql`)
+
+**Short answer: nothing to run by hand — but only on a database that has never been started
+before.** `db/init/` holds two scripts, applied in filename order:
+
+1. `01-init-vector.sql` — enables the `vector` extension.
+2. `02-documents-and-chunks.sql` — creates the `documents` and `chunks` tables (feature 003).
+
+These are not migrations and there is no separate "apply the schema" command. They are picked up
+automatically by the official PostgreSQL Docker image's own startup mechanism: anything mounted at
+`/docker-entrypoint-initdb.d/` — which `docker-compose.yml` points at `./db/init` — runs once,
+**only when the container's data directory is empty**. On a first-ever `docker compose up -d` for
+this repository (no `db-data` volume yet), both scripts run automatically and you get a fully
+formed schema for free.
+
+**The trap**: that "only when empty" rule means an *existing* database — one you already brought up
+before this schema existed, or before pulling this change — will **not** pick up the new script on
+a plain `docker compose up -d`. Postgres sees a non-empty data directory and skips
+`/docker-entrypoint-initdb.d/` entirely. If `\d documents` (below) comes back empty, this is why.
+
+To force the scripts to (re-)run, recreate the volume from scratch:
+
+```bash
+docker compose down -v   # destroys all stored data — see Reset below
+docker compose up -d
+```
+
+To verify the schema is actually present:
+
+```bash
+docker compose exec db psql -U aihelpdesk -d aihelpdesk -c "\d documents"
+docker compose exec db psql -U aihelpdesk -d aihelpdesk -c "\d chunks"
+```
+
+Full column-by-column detail, plus a per-table walkthrough with sample inserts, is in
+[`specs/003-document-vector-schema/quickstart.md`](specs/003-document-vector-schema/quickstart.md).
+
 ### Reset (destructive)
 
 ```bash
@@ -144,7 +182,8 @@ docker compose down -v
 
 **This discards all stored database data** — distinct from the ordinary `docker compose down`
 stop command above, which keeps it. It is also the *only* way a changed `db/init/*.sql` script
-takes effect: the database image only runs init scripts when its data directory is empty.
+takes effect: the database image only runs init scripts when its data directory is empty (see
+[Database schema](#database-schema-dbinitsql) above).
 
 ### Run the test suites
 
@@ -189,7 +228,7 @@ backend/mvnw test -Pverify-ai
 | Symptom | Cause | Fix |
 |---|---|---|
 | Compose fails with a port conflict on 5432 | A local PostgreSQL is already running | Stop it, or change the host-side port mapping and this doc together |
-| `vector` extension query returns no rows | Volume pre-dated the init script | `docker compose down -v`, then `up -d` |
+| `vector` extension query returns no rows, or `\d documents` / `\d chunks` shows nothing | Volume pre-dated one of the init scripts — see [Database schema](#database-schema-dbinitsql) | `docker compose down -v`, then `up -d` |
 | Backend health `503` while the database is up | Wrong credentials, or `.env` not created | Confirm `.env` exists and matches `docker-compose.yml` |
 | `npm start` fails on an engine check | Node 22.0–22.11 | Upgrade to ≥22.12 |
 | `npm start` / dev server fails with "Port 4200 is already in use" | Another instance is already running | Stop it first — the dev server does not silently move to another port |

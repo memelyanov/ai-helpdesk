@@ -1,1 +1,1 @@
-powershell -ExecutionPolicy Bypass -File .\start-dev.ps1
+powershell -ExecutionPolicy Bypass -File .\start-dev.ps1 -IncludeDb
