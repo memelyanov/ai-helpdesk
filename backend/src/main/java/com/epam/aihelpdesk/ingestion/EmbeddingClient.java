@@ -18,7 +18,9 @@ import org.springframework.stereotype.Component;
 /**
  * Embeds every chunk of a document in as few Azure OpenAI requests as possible — one batched call
  * per document, sub-batched only if the chunk count exceeds the provider's per-request input
- * ceiling (research Decision 4).
+ * ceiling (research Decision 4). Also embeds a single question via {@link #embedQuery(String)},
+ * reused as-is by feature 007's chat endpoint (that feature's research Decision 3) so there is no
+ * second Azure client-construction path.
  *
  * <p>The {@link AzureOpenAiEmbeddingModel} is built by hand, the same construction pattern
  * {@code AzureOpenAiConnectivityIT} already uses for chat, rather than via Spring AI's
@@ -96,6 +98,42 @@ public class EmbeddingClient {
         }
         log.info("embedding request succeeded: chunkCount={}", texts.size());
         return batchResult;
+    }
+
+    /**
+     * Embeds a single piece of free text — used by feature 007's chat endpoint to embed a
+     * caller's question with the exact same deployment/construction path {@link #embed} already
+     * uses for chunks, so questions and document content are comparable (constitution Principle V).
+     * Reuses this class's existing {@code errorCode} vocabulary; a chat-package caller catches and
+     * translates the exception at its own package boundary rather than this method throwing a
+     * chat-scoped exception type directly (research Decision 3).
+     *
+     * @throws IngestionProcessingException {@code provider_unconfigured} if the embedding
+     *                                       configuration is incomplete, or {@code processing_failed}
+     *                                       if the call to Azure OpenAI fails
+     */
+    public float[] embedQuery(String text) {
+        if (!properties.isEmbeddingComplete()) {
+            log.warn("query embedding request skipped: provider not configured");
+            throw new IngestionProcessingException("provider_unconfigured",
+                    "Azure OpenAI embedding configuration is incomplete; no request was attempted.");
+        }
+
+        AzureOpenAiEmbeddingModel model = buildModel();
+        log.info("query embedding request started");
+        EmbeddingResponse response;
+        try {
+            AzureOpenAiEmbeddingOptions options = AzureOpenAiEmbeddingOptions.builder()
+                    .deploymentName(properties.getEmbeddingDeploymentName())
+                    .build();
+            response = model.call(new EmbeddingRequest(List.of(text), options));
+        } catch (RuntimeException e) {
+            // Deliberately not e.getMessage() alone — see the identical comment in embedBatch.
+            log.warn("query embedding request failed: cause={}", e.toString());
+            throw new IngestionProcessingException("processing_failed", "Query embedding request failed.", e);
+        }
+        log.info("query embedding request succeeded");
+        return response.getResults().get(0).getOutput();
     }
 
     private AzureOpenAiEmbeddingModel buildModel() {

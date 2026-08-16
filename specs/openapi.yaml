@@ -1,0 +1,367 @@
+openapi: 3.0.3
+info:
+  title: ai-helpdesk API
+  description: >
+    RAG-based helpdesk backend: ingest documents, list/download/delete them, and ask questions
+    answered strictly from the ingested corpus with deterministic citations. Generated from the
+    controller/DTO source; see specs/api-overview.md for the human-readable companion and each
+    feature's contracts/*.md for full narrative detail.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: health
+    description: Liveness and dependency status (feature 001)
+  - name: documents
+    description: Ingest, list, download, delete documents (features 004-006)
+  - name: chat
+    description: Ask a question over the ingested corpus (feature 007)
+
+paths:
+  /actuator/health:
+    get:
+      tags: [health]
+      summary: Application and dependency health
+      description: >
+        Provided by Spring Boot Actuator. The db component reflects real database reachability;
+        the azureOpenAi component reflects configuration completeness only (no network call).
+      operationId: getHealth
+      responses:
+        "200":
+          description: Application is UP (db reachable; azureOpenAi UP or UNKNOWN)
+          content:
+            application/vnd.spring-boot.actuator.v3+json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Application is DOWN (database unreachable)
+          content:
+            application/vnd.spring-boot.actuator.v3+json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /documents:
+    post:
+      tags: [documents]
+      summary: Ingest a document
+      operationId: uploadDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Exactly one file part, non-empty, <= 20 MB.
+      responses:
+        "201":
+          description: Document ingested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentIngestionResponse"
+        "400":
+          description: invalid_file | unsupported_type | unparseable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                invalid_file:
+                  value: { error: invalid_file, message: "Uploaded file exceeds the 20 MB size limit." }
+                unsupported_type:
+                  value: { error: unsupported_type, message: "File type is not supported." }
+                unparseable:
+                  value: { error: unparseable, message: "File content could not be parsed." }
+        "503":
+          description: provider_unconfigured | processing_failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                provider_unconfigured:
+                  value: { error: provider_unconfigured, message: "Azure OpenAI embedding configuration is incomplete." }
+                processing_failed:
+                  value: { error: processing_failed, message: "Failed to process the uploaded file." }
+    get:
+      tags: [documents]
+      summary: List all ingested documents
+      operationId: listDocuments
+      responses:
+        "200":
+          description: Every ingested document, newest first (empty array if none)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentSummaryResponse"
+
+  /documents/{id}/content:
+    get:
+      tags: [documents]
+      summary: Download a document's original file bytes
+      operationId: downloadDocumentContent
+      parameters:
+        - $ref: "#/components/parameters/DocumentId"
+      responses:
+        "200":
+          description: Original file bytes
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: 'attachment; filename="<original filename>"'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: document_not_found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                not_found:
+                  value: { error: document_not_found, message: "No document exists with the given id." }
+
+  /documents/{id}:
+    delete:
+      tags: [documents]
+      summary: Permanently delete a document and its chunks
+      operationId: deleteDocument
+      parameters:
+        - $ref: "#/components/parameters/DocumentId"
+      responses:
+        "204":
+          description: Deleted; no body
+        "404":
+          description: document_not_found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                not_found:
+                  value: { error: document_not_found, message: "No document exists with the given id." }
+        "503":
+          description: deletion_failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                deletion_failed:
+                  value: { error: deletion_failed, message: "Failed to delete the document." }
+
+  /chat:
+    post:
+      tags: [chat]
+      summary: Ask a question, get a grounded, cited answer
+      operationId: chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+            examples:
+              unfiltered:
+                value: { question: "Can I expense a taxi from the airport?" }
+              filtered:
+                value:
+                  question: "Can I expense a taxi from the airport?"
+                  documentIds: ["3fa85f64-5717-4562-b3fc-2c963f66afa6"]
+      responses:
+        "200":
+          description: Grounded answer with citations, or the fixed "not covered" response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+              examples:
+                grounded:
+                  value:
+                    answer: "Yes, taxis are reimbursable within policy limits."
+                    sources:
+                      - documentId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                        filename: "travel-expense-policy.pdf"
+                        page: "2"
+                        score: 0.81
+                      - documentId: "8b1a9953-c461-4a9a-8b1a-9953c461f9a2"
+                        filename: "corporate-card-rules.txt"
+                        page: "no page structure"
+                        score: 0.63
+                not_covered:
+                  value:
+                    answer: "I don't have this information in the documentation."
+                    sources: []
+        "400":
+          description: blank_question | question_too_long | malformed_request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                blank_question:
+                  value: { error: blank_question, message: "Question must not be blank." }
+                question_too_long:
+                  value: { error: question_too_long, message: "Question must not exceed 1000 characters." }
+                malformed_request:
+                  value: { error: malformed_request, message: "Request body could not be parsed as a valid chat request." }
+        "503":
+          description: provider_unconfigured | processing_failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                provider_unconfigured:
+                  value: { error: provider_unconfigured, message: "Azure OpenAI chat configuration is incomplete; no request was attempted." }
+                processing_failed:
+                  value: { error: processing_failed, message: "Chat completion request failed." }
+
+components:
+  parameters:
+    DocumentId:
+      name: id
+      in: path
+      required: true
+      description: >
+        Document identifier. A malformed value and a well-formed-but-nonexistent one both resolve
+        to the same 404 document_not_found.
+      schema:
+        type: string
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN]
+        components:
+          type: object
+          properties:
+            db:
+              $ref: "#/components/schemas/HealthComponent"
+            azureOpenAi:
+              $ref: "#/components/schemas/HealthComponent"
+          additionalProperties:
+            $ref: "#/components/schemas/HealthComponent"
+          description: Additional stock Actuator components (diskSpace, ping, ssl, ...) may appear.
+
+    HealthComponent:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [UP, DOWN, UNKNOWN]
+        details:
+          type: object
+          additionalProperties: true
+
+    DocumentIngestionResponse:
+      type: object
+      required: [documentId, chunkCount]
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        chunkCount:
+          type: integer
+          minimum: 0
+          description: May legitimately be 0 for a document that parsed but yielded no extractable text.
+
+    DocumentSummaryResponse:
+      type: object
+      required: [documentId, filename, contentType, uploadedAt, chunkCount]
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        contentType:
+          type: string
+        uploadedAt:
+          type: string
+          format: date-time
+        chunkCount:
+          type: integer
+          minimum: 0
+
+    ChatRequest:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Trimmed before length is checked; blank after trimming is rejected.
+        documentIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: >
+            Optional. Present and non-empty restricts retrieval to these documents. Absent, null,
+            or empty means "search the whole corpus." Every entry must be a valid UUID or the
+            entire request is rejected as malformed_request.
+
+    ChatResponse:
+      type: object
+      required: [answer, sources]
+      properties:
+        answer:
+          type: string
+          description: >
+            Never blank. Either a generated, grounded answer, or the fixed string
+            "I don't have this information in the documentation."
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/SourceCitation"
+          description: Empty if and only if answer is the fixed not-covered string.
+
+    SourceCitation:
+      type: object
+      required: [documentId, filename, page, score]
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        page:
+          type: string
+          description: >
+            1-indexed page number as a string, or the fixed string "no page structure" for a
+            page-less source. Never null, never a bare number.
+        score:
+          type: number
+          format: double
+          minimum: 0.5
+          maximum: 1
+          description: 1 - cosine distance, rounded to two decimal places.
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Stable machine-readable code; see each endpoint for its possible values.
+        message:
+          type: string
+          description: Human-readable, informational only. MUST NOT be parsed by clients.
