@@ -45,3 +45,15 @@ management:
   endpoint:
     health:
       show-details: always
+
+logging:
+  # Spring Boot's built-in rolling-file support (no custom logback-spring.xml needed): setting
+  # logging.file.name adds a RollingFileAppender alongside the default console appender, so log
+  # output goes to both places, not just console as before.
+  file:
+    name: logs/ai-helpdesk.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 500MB
