@@ -30,9 +30,11 @@ public class ChatCompletionClient {
     private static final Logger log = LoggerFactory.getLogger(ChatCompletionClient.class);
 
     /** The constitution's exact fixed system prompt (Query Pipeline section). */
-    static final String SYSTEM_PROMPT = "Answer the following question based ONLY on the context provided. "
-            + "If the answer is not in the context, respond with "
-            + "'I don't have this information in the documentation.' Always cite your sources.";
+    // static final String SYSTEM_PROMPT = "Answer the following question based ONLY on the context provided. "
+    //         + "If the answer is not in the context, respond with "
+    //         + "'I don't have this information in the documentation.' Always cite your sources.";
+    static final String SYSTEM_PROMPT = "Answer the following question based on the context provided. "
+            + "Always cite your sources.";
 
     private final AzureOpenAiProperties properties;
 
@@ -41,15 +43,17 @@ public class ChatCompletionClient {
     }
 
     /**
-     * Generates an answer from the question and the surviving retrieved passages. Returns the raw
-     * completion text, possibly blank (the caller, {@link ChatService}, treats a blank completion
-     * the same as the "not covered" outcome — spec.md Edge Cases).
+     * Generates an answer from the question and the surviving retrieved passages. Returns the exact
+     * prompt sent and the raw completion text (possibly blank — the caller, {@link ChatService},
+     * treats a blank completion the same as the "not covered" outcome — spec.md Edge Cases), so the
+     * caller can build the {@code prompt_assembled}/{@code model_response_received} trace steps
+     * without this client needing to know tracing exists (research Decision 3).
      *
      * @throws ChatProcessingException {@code provider_unconfigured} if the chat configuration is
      *                                  incomplete, or {@code processing_failed} if the call to Azure
      *                                  OpenAI fails
      */
-    public String complete(String question, List<RetrievedChunk> passages) {
+    public ChatCompletionResult complete(String question, List<RetrievedChunk> passages) {
         if (!properties.isComplete()) {
             log.warn("chat completion request skipped: provider not configured");
             throw new ChatProcessingException("provider_unconfigured",
@@ -75,7 +79,8 @@ public class ChatCompletionClient {
         String completion = response.getResult().getOutput().getText();
         log.info("chat completion request succeeded: completionLength={}",
                 completion == null ? 0 : completion.length());
-        return completion;
+
+        return new ChatCompletionResult(SYSTEM_PROMPT, userMessage, completion);
     }
 
     private AzureOpenAiChatModel buildModel() {
