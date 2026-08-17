@@ -1,5 +1,6 @@
 package com.epam.aihelpdesk.chat.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 
 /**
@@ -19,9 +20,26 @@ import java.util.List;
  * @param answer  never blank.
  * @param sources every distinct {@code (documentId, page)} that contributed a retrieved passage to
  *                {@code answer}, in descending similarity order.
+ * @param trace   feature 009: present, and non-{@code null}, only when the request had
+ *                {@code includeTrace=true} — one {@link ChatTraceStep} per pipeline stage that
+ *                actually ran, in execution order (FR-010/FR-011). {@code null} otherwise, and
+ *                omitted from the JSON body entirely rather than serialized as
+ *                {@code "trace": null} ({@link JsonInclude.Include#NON_NULL} below) — so a caller
+ *                that never sets {@code includeTrace} sees a response byte-identical to this
+ *                record's original, pre-009 two-field contract (FR-010, User Story 3). Never changes
+ *                {@code answer} or {@code sources}' value (FR-016) — purely observational.
  */
-public record ChatResponse(String answer, List<SourceCitation> sources) {
+public record ChatResponse(String answer, List<SourceCitation> sources,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<ChatTraceStep> trace) {
 
     /** The fixed answer text for the "documentation does not cover this" outcome (FR-007). */
     public static final String NOT_COVERED_ANSWER = "I don't have this information in the documentation.";
+
+    /**
+     * Convenience constructor for the pre-009 two-field shape — equivalent to {@code trace=null}
+     * ("no trace"), used by every call site this feature does not need to attach a trace to.
+     */
+    public ChatResponse(String answer, List<SourceCitation> sources) {
+        this(answer, sources, null);
+    }
 }

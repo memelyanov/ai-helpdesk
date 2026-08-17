@@ -11,11 +11,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.epam.aihelpdesk.chat.dto.ChatRequest;
 import com.epam.aihelpdesk.chat.dto.ChatResponse;
+import com.epam.aihelpdesk.chat.dto.ChatTraceStep;
 import com.epam.aihelpdesk.chat.dto.SourceCitation;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -202,5 +206,119 @@ class ChatControllerContractTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.error").value("processing_failed"))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(ChatResponse.NOT_COVERED_ANSWER)));
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // Feature 009, User Story 1 — every request is correlated via MDC, set before validation and
+    // always cleared afterward (FR-008, research Decision 1)
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    void theCorrelationIdIsSetDuringTheServiceCallAndClearedAfterASuccessfulRequest() throws Exception {
+        when(chatService.answer(any())).thenAnswer(invocation -> {
+            Assertions.assertThat(MDC.get("chatRequestId"))
+                    .as("chatRequestId must be set on the MDC while ChatService.answer(...) runs")
+                    .isNotNull();
+            return new ChatResponse("An answer.", List.of());
+        });
+
+        mockMvc.perform(post("/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\": \"Can I expense a taxi?\"}"))
+                .andExpect(status().isOk());
+
+        Assertions.assertThat(MDC.get("chatRequestId"))
+                .as("chatRequestId must be cleared once the request completes")
+                .isNull();
+    }
+
+    @Test
+    void theCorrelationIdIsStillClearedAfterAValidationRejectionEvenThoughChatServiceIsNeverCalled()
+            throws Exception {
+        mockMvc.perform(post("/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\": \"   \"}"))
+                .andExpect(status().isBadRequest());
+
+        verify(chatService, never()).answer(any());
+        Assertions.assertThat(MDC.get("chatRequestId"))
+                .as("chatRequestId must be cleared even when validation rejects the request")
+                .isNull();
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // Feature 009, User Story 2 — includeTrace passes through to ChatService, and a trace/no-trace
+    // ChatResponse serializes with/without the "trace" key accordingly (FR-010, FR-011)
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    void includeTraceOnTheRequestBodyReachesChatServiceUnchanged() throws Exception {
+        when(chatService.answer(any())).thenReturn(new ChatResponse("An answer.", List.of()));
+
+        mockMvc.perform(post("/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\": \"Can I expense a taxi?\", \"includeTrace\": true}"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<ChatRequest> captor = ArgumentCaptor.forClass(ChatRequest.class);
+        verify(chatService).answer(captor.capture());
+        Assertions.assertThat(captor.getValue().includeTrace()).isTrue();
+    }
+
+    @Test
+    void aStubbedResponseWithANonNullTraceSerializesTheTraceArrayInStageOrder() throws Exception {
+        ChatTraceStep step1 = new ChatTraceStep(ChatTraceStep.REQUEST_RECEIVED, 0L,
+                Map.of("question", "Can I expense a taxi?", "documentIds", List.of()));
+        ChatTraceStep step2 = new ChatTraceStep(ChatTraceStep.QUESTION_EMBEDDED, 5L,
+                Map.of("vectorDimensions", 1536));
+        when(chatService.answer(any()))
+                .thenReturn(new ChatResponse("An answer.", List.of(), List.of(step1, step2)));
+
+        mockMvc.perform(post("/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\": \"Can I expense a taxi?\", \"includeTrace\": true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trace.length()").value(2))
+                .andExpect(jsonPath("$.trace[0].stage").value("request_received"))
+                .andExpect(jsonPath("$.trace[1].stage").value("question_embedded"));
+    }
+
+    @Test
+    void aStubbedResponseWithANullTraceProducesNoTraceKeyAtAll() throws Exception {
+        when(chatService.answer(any())).thenReturn(new ChatResponse("An answer.", List.of()));
+
+        mockMvc.perform(post("/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\": \"Can I expense a taxi?\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trace").doesNotExist());
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // Feature 009, User Story 3 — omitting includeTrace and explicitly sending it false are
+    // identical, byte-for-byte, in both directions (FR-010, User Story 3 Acceptance Scenarios 1-2)
+    // -----------------------------------------------------------------------------------------
+
+    @Test
+    void omittingIncludeTraceAndExplicitlySettingItFalseBothProduceNoTraceKeyAndIdenticalBodies() throws Exception {
+        ChatResponse stubbed = new ChatResponse("Yes, taxis are reimbursable.",
+                List.of(new SourceCitation(UUID.randomUUID(), "travel-expense-policy.pdf", "2", 0.81)));
+        when(chatService.answer(any())).thenReturn(stubbed);
+
+        String omittedBody = mockMvc.perform(post("/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\": \"Can I expense a taxi?\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trace").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+
+        String explicitFalseBody = mockMvc.perform(post("/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\": \"Can I expense a taxi?\", \"includeTrace\": false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trace").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+
+        Assertions.assertThat(omittedBody).isEqualTo(explicitFalseBody);
     }
 }

@@ -2,6 +2,9 @@ package com.epam.aihelpdesk.health;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +23,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class AzureOpenAiProperties {
 
+    private static final Logger log = LoggerFactory.getLogger(AzureOpenAiProperties.class);
+
     private final String apiKey;
     private final String endpoint;
     private final String chatDeploymentName;
@@ -34,6 +39,9 @@ public class AzureOpenAiProperties {
         this.endpoint = endpoint;
         this.chatDeploymentName = chatDeploymentName;
         this.embeddingDeploymentName = embeddingDeploymentName;
+
+        log.info("Azure OpenAI properties loaded: chatDeploymentName={}, embeddingDeploymentName={}",
+                this.chatDeploymentName, this.embeddingDeploymentName);
     }
 
     public String getApiKey() {

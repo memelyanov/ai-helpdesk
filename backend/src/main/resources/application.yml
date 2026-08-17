@@ -57,3 +57,10 @@ logging:
       max-file-size: 10MB
       max-history: 30
       total-size-cap: 500MB
+  pattern:
+    # Feature 009: Spring Boot's own default console/file patterns, extended additively with
+    # %X{chatRequestId} (SLF4J MDC, research Decision 1) so every log line emitted while a chat
+    # request is being processed carries its correlation id; blank for any line logged outside a
+    # chat request (MDC key not set).
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr([%X{chatRequestId}]){yellow} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] [%X{chatRequestId}] %-40.40logger{39} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"

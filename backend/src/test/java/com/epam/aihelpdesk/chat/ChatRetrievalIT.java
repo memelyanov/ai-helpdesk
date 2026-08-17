@@ -126,7 +126,8 @@ class ChatRetrievalIT {
         insertChunk(documentId, 5, "rank-it.txt", 5, "fifth passage, excluded by TOP_K cap",
                 axisSum(100, 101, 102, 103, 104));
         when(embeddingClient.embedQuery(anyString())).thenReturn(query);
-        when(chatCompletionClient.complete(any(), any())).thenReturn("A grounded answer.");
+        when(chatCompletionClient.complete(any(), any()))
+                .thenReturn(new ChatCompletionResult("system prompt", "prompt", "A grounded answer."));
 
         JsonNode body = postChat("Question scoped to the rank-it corpus", null);
 
@@ -156,7 +157,8 @@ class ChatRetrievalIT {
         insertChunk(otherDocumentId, 1, "filter-it-other.txt", 1, "more relevant but filtered out",
                 axisSum(110));
         when(embeddingClient.embedQuery(anyString())).thenReturn(query);
-        when(chatCompletionClient.complete(any(), any())).thenReturn("A grounded answer scoped to one document.");
+        when(chatCompletionClient.complete(any(), any())).thenReturn(
+                new ChatCompletionResult("system prompt", "prompt", "A grounded answer scoped to one document."));
 
         JsonNode filtered = postChat("Question scoped to the filter-it corpus", List.of(allowedDocumentId));
 
@@ -193,7 +195,8 @@ class ChatRetrievalIT {
         float[] query = unitVector(140);
         insertChunk(documentId, 1, "filter-mismatch-it.txt", 1, "a genuinely relevant passage", axisSum(140));
         when(embeddingClient.embedQuery(anyString())).thenReturn(query);
-        when(chatCompletionClient.complete(any(), any())).thenReturn("A grounded answer.");
+        when(chatCompletionClient.complete(any(), any()))
+                .thenReturn(new ChatCompletionResult("system prompt", "prompt", "A grounded answer."));
 
         JsonNode unfiltered = postChat("Question that matches the filter-mismatch corpus", null);
         assertThat(unfiltered.get("sources")).as("the same question succeeds without a filter").isNotEmpty();
