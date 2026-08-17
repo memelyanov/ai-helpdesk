@@ -1,0 +1,155 @@
+.file-item {
+  padding: 12px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  background: #f1efe8;
+  color: #2c2c2a;
+}
+
+.download-action {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #185fa5;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* FR-013: revealed on hover OR keyboard focus — never only one or the other. */
+.file-item:hover .download-action,
+.file-item:focus-within .download-action,
+.download-action:focus-visible {
+  opacity: 1;
+}
+
+.download-action:hover:not(:disabled) {
+  background: #e6f1fb;
+}
+
+.download-action:disabled {
+  color: #b4b2a9;
+  cursor: not-allowed;
+}
+
+.download-error {
+  font-size: 11px;
+  color: #b3261e;
+  padding: 0 12px 4px;
+  line-height: 1.4;
+}
+
+.delete-action {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #b3261e;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* FR-013: revealed on hover OR keyboard focus — never only one or the other. */
+.file-item:hover .delete-action,
+.file-item:focus-within .delete-action,
+.delete-action:focus-visible {
+  opacity: 1;
+}
+
+.delete-action:hover {
+  background: #fdecea;
+}
+
+.delete-confirm {
+  background: #fdecea;
+  border-color: #f3c4bd;
+  gap: 8px;
+}
+
+.delete-confirm-text {
+  flex: 1;
+  font-size: 12px;
+  color: #611a15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.delete-confirm-btn,
+.delete-cancel-btn {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.delete-confirm-btn {
+  background: #b3261e;
+  color: white;
+}
+
+.delete-cancel-btn {
+  background: transparent;
+  border-color: #d3d1c7;
+  color: #2c2c2a;
+}
+
+.delete-error {
+  font-size: 11px;
+  color: #b3261e;
+  padding: 0 12px 4px;
+  line-height: 1.4;
+}
+
+.file-item:hover {
+  background: #e5e5e0;
+  border-color: #d3d1c7;
+}
+
+.file-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  position: relative;
+}
+
+.file-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+}
+
+.file-icon.pdf::before {
+  background: #d94c3d;
+}
+
+.file-icon.text::before {
+  background: #7a8a99;
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

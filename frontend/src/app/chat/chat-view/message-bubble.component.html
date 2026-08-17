@@ -1,0 +1,46 @@
+<div
+  class="message-group"
+  [class.user]="message().role === 'user'"
+  [class.loading-indicator]="message().status === 'pending'"
+>
+  <div class="message-container">
+    @if (message().status === 'error') {
+      <div class="message error">
+        {{ message().errorMessage }}
+      </div>
+    } @else if (message().role === 'user') {
+      <div class="message user">
+        {{ message().text }}
+      </div>
+    } @else if (message().status === 'pending') {
+      <div class="message assistant pending">Thinking…</div>
+    } @else {
+      <div class="message assistant">
+        {{ message().text }}
+      </div>
+      @if (message().citations.length > 0) {
+        <div class="sources">
+          <div class="sources-label">Sources:</div>
+          <div class="source-badges">
+            @for (citation of message().citations; track citation.documentId + citation.pageLabel) {
+              <button
+                type="button"
+                class="source-badge"
+                [class.source-badge--unavailable]="isUnavailable(citation)"
+                [disabled]="isUnavailable(citation)"
+                (click)="onCitationClick(citation)"
+              >
+                @if (isUnavailable(citation)) {
+                  {{ citation.filename }} · no longer available
+                } @else {
+                  {{ citation.filename }} · p.{{ citation.pageLabel }} ·
+                  {{ citation.scorePercent }}% match
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

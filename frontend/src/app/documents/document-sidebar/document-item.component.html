@@ -1,0 +1,37 @@
+@if (confirming()) {
+  <div class="file-item delete-confirm">
+    <span class="delete-confirm-text">Delete "{{ document().filename }}"?</span>
+    <button type="button" class="delete-confirm-btn" (click)="deleteConfirmed.emit()">
+      Confirm
+    </button>
+    <button type="button" class="delete-cancel-btn" (click)="deleteCancelled.emit()">Cancel</button>
+  </div>
+} @else {
+  <div class="file-item">
+    <i class="file-icon" [class.pdf]="iconKind === 'pdf'" [class.text]="iconKind === 'text'"></i>
+    <div class="file-name">{{ document().filename }}</div>
+    <button
+      type="button"
+      class="download-action"
+      title="Download {{ document().filename }}"
+      [disabled]="downloadUnavailable()"
+      (click)="onDownloadClick()"
+    >
+      ⭳
+    </button>
+    <button
+      type="button"
+      class="delete-action"
+      title="Delete {{ document().filename }}"
+      (click)="deleteRequested.emit()"
+    >
+      ✕
+    </button>
+  </div>
+}
+@if (downloadError(); as message) {
+  <div class="download-error">{{ message }}</div>
+}
+@if (deleteError(); as message) {
+  <div class="delete-error">{{ message }}</div>
+}

@@ -1,0 +1,39 @@
+<div class="files-section">
+  <div class="files-label">Documents</div>
+
+  @if (!loaded()) {
+    <div class="loading-state">Loading documents…</div>
+  } @else if (documents().length === 0) {
+    <div class="empty-state">
+      No documents uploaded yet. Use the upload control below to add one.
+    </div>
+  } @else {
+    @for (document of documents(); track document.documentId) {
+      <app-document-item
+        [document]="document"
+        [confirming]="confirmingDocumentId() === document.documentId"
+        [deleteError]="deleteErrors().get(document.documentId) ?? null"
+        (deleteRequested)="onDeleteRequested(document.documentId)"
+        (deleteConfirmed)="onDeleteConfirmed(document.documentId)"
+        (deleteCancelled)="onDeleteCancelled()"
+      />
+    }
+  }
+</div>
+
+<div class="sidebar-footer">
+  @if (uploadError(); as message) {
+    <div class="upload-error">{{ message }}</div>
+  }
+  <input
+    #fileInput
+    type="file"
+    accept=".pdf,.txt"
+    class="visually-hidden"
+    [disabled]="uploading()"
+    (change)="onFileSelected($event)"
+  />
+  <button type="button" class="upload-btn" [disabled]="uploading()" (click)="fileInput.click()">
+    {{ uploading() ? 'Uploading…' : 'Upload docs' }}
+  </button>
+</div>

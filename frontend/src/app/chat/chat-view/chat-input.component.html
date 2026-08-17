@@ -1,0 +1,16 @@
+<div class="input-area">
+  <div class="input-wrapper">
+    <input
+      type="text"
+      placeholder="Ask a question about your documents..."
+      [value]="value()"
+      [disabled]="pending()"
+      (input)="onInput($any($event.target).value)"
+      (keydown)="onKeydown($event)"
+    />
+    @if (overLimit()) {
+      <span class="char-limit char-limit--over">{{ trimmedLength() }} / {{ maxLength }}</span>
+    }
+  </div>
+  <button class="send-btn" type="button" [disabled]="!canSubmit()" (click)="submit()">Send</button>
+</div>
