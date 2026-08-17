@@ -1,5 +1,19 @@
-<main class="placeholder">
-  <h1>AI Helpdesk</h1>
-  <p>PoC functionality is not yet implemented.</p>
-  <app-connection-status />
-</main>
+<div class="container">
+  <aside class="sidebar">
+    <header class="sidebar-header">
+      <h2 class="sidebar-title">Knowledge Base</h2>
+      <app-connection-status />
+    </header>
+    <app-document-sidebar />
+  </aside>
+
+  <main class="main">
+    <header class="chat-header">
+      <div>
+        <h1 class="chat-title">Ask me anything</h1>
+        <p class="chat-subtitle">Chat powered by your documents</p>
+      </div>
+    </header>
+    <app-chat-view />
+  </main>
+</div>

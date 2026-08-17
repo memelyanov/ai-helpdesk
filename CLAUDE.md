@@ -1,36 +1,39 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-[specs/007-chat-endpoint/plan.md](specs/007-chat-endpoint/plan.md)
+[specs/008-frontend-chat-ui/plan.md](specs/008-frontend-chat-ui/plan.md)
 
 Supporting design artifacts for the active feature:
-- [spec.md](specs/007-chat-endpoint/spec.md) — requirements for `POST /chat`; two Clarifications entries (Session 2026-08-16: max question length is 1000 characters; a citation for a page-less/plain-text source shows a fixed "no page structure" indicator, never a number or `null`)
-- [research.md](specs/007-chat-endpoint/research.md) — 9 decisions: a new `chat` package/controller (a distinct resource from `/documents`, not another verb on `DocumentController`), `EmbeddingClient` (feature 004) gains a reused `embedQuery(String)` method with its ingestion-scoped exception translated at the package boundary, a new `ChatCompletionClient` built the same hand-wired way `AzureOpenAiConnectivityIT` already proves works, retrieval reuses feature 003's documented similarity-search query verbatim (top-K=4 in SQL, the 0.5 similarity threshold applied afterward in code, not in the `WHERE` clause), citations are computed from retrieval results grouped by `(documentId, pageNumber)` — never parsed from the model's answer text, the "not covered" outcome is a plain `200` using the constitution's own fixed wording, a new chat-scoped exception hierarchy (`InvalidChatRequestException` → `400`, `ChatProcessingException` → `503`) rather than reusing `ingestion`'s `Document*`/`Ingestion*` classes, three-tier test strategy (`contract` + `db` + `azure`, no new dependency or `pom.xml` profile)
-- [data-model.md](specs/007-chat-endpoint/data-model.md) — no new persisted entities (reads feature 003's existing `documents`/`chunks`); `ChatRequest`/`ChatResponse`/`SourceCitation`/`ChatErrorResponse` DTOs, `RetrievedChunk` internal shape, fixed `TOP_K=4`/`SIMILARITY_THRESHOLD=0.5`/`MAX_QUESTION_LENGTH=1000` constants
-- [contracts/chat-api-contract.md](specs/007-chat-endpoint/contracts/chat-api-contract.md) — `POST /chat` request/response/error shape
-- [quickstart.md](specs/007-chat-endpoint/quickstart.md) — bring-up, per-user-story `curl` validation, the full evaluation-set accuracy check (SC-001)
+- [spec.md](specs/008-frontend-chat-ui/spec.md) — five prioritized user stories (ask a grounded/cited question, browse the live document list, upload, download, delete) turning `docs/rag_chatbot.html`'s static mockup into a live Angular UI; three Clarifications entries (Session 2026-08-16: citation badges show the relevance score as well as document+page; a pending chat request shows an indefinite loading indicator with no client-side timeout or cancel; sidebar rows show filename only, matching the mockup)
+- [research.md](specs/008-frontend-chat-ui/research.md) — 8 decisions: a new backend CORS allowance for `/documents/**` and `/chat` (mirroring feature 002's actuator-only CORS, since no other CORS config exists in the codebase), signal-based Angular services with no new state-management dependency, downloads use the filename already in hand rather than parsing `Content-Disposition` (avoids a CORS header exposure), an inline per-row two-step delete confirmation instead of `window.confirm()` (testability), a closed error-code→message lookup table so no raw backend text is ever shown, client-side question-length validation mirroring the backend's fixed 1000-character constant, relevance score rendered as a rounded percentage, and Vitest + `HttpTestingController`/`TestBed` reused as-is with no new test tooling
+- [data-model.md](specs/008-frontend-chat-ui/data-model.md) — no persistence; client-side `ChatMessage`/`Citation`/`DocumentSummary` types and the `ChatService`/`DocumentsService` signal-based state shapes, each a direct mirror of an existing backend response shape
+- [contracts/frontend-service-contract.md](specs/008-frontend-chat-ui/contracts/frontend-service-contract.md) — the `ChatService`/`DocumentsService` public surface every component is built against, no new REST contract
+- [quickstart.md](specs/008-frontend-chat-ui/quickstart.md) — bring-up (`npm start` + backend + the new CORS prerequisite), per-user-story manual validation, `npm test` for the automated suite
 
 Prior features, still the source of truth for their own scope:
 - [specs/001-project-scaffolding/plan.md](specs/001-project-scaffolding/plan.md) — database, backend,
   frontend skeleton; [contracts/health-api.md](specs/001-project-scaffolding/contracts/health-api.md)
   — the health endpoint response shape.
 - [specs/002-frontend-health-wire/plan.md](specs/002-frontend-health-wire/plan.md) — the frontend
-  connection-status indicator wired to that health endpoint.
+  connection-status indicator wired to that health endpoint; this feature reuses
+  `<app-connection-status />` as-is inside the new sidebar header, and follows the same
+  `HttpTestingController`/signal-based-service pattern its `HealthService` established.
 - [specs/003-document-vector-schema/plan.md](specs/003-document-vector-schema/plan.md) — the
-  `documents`/`chunks` schema this feature reads from; its
-  [contracts/similarity-search-contract.md](specs/003-document-vector-schema/contracts/similarity-search-contract.md)
-  defines the exact query shape this feature is the first to actually run.
+  `documents`/`chunks` schema underlying every endpoint this feature calls.
 - [specs/004-document-ingestion-endpoint/plan.md](specs/004-document-ingestion-endpoint/plan.md) —
-  `POST /documents` and `EmbeddingClient`, whose embedding-deployment construction this feature
-  reuses for query embedding; its
+  `POST /documents`; its
   [contracts/ingestion-api-contract.md](specs/004-document-ingestion-endpoint/contracts/ingestion-api-contract.md)
-  documents the `4xx`/`503` error-vocabulary pattern this feature's own `400`/`503` split follows.
+  documents the `4xx`/`503` error vocabulary this feature's upload error-message mapping is built
+  from.
 - [specs/005-document-listing-download/plan.md](specs/005-document-listing-download/plan.md) —
-  `GET /documents` and `GET /documents/{id}/content`; a citation's `documentId` in this feature's
-  response is the same identifier a caller passes to the download endpoint.
-- [specs/006-document-delete/plan.md](specs/006-document-delete/plan.md) — `DELETE /documents/{id}`;
-  established the pattern (reused here) of a new sibling exception hierarchy rather than reusing an
-  existing feature's Javadoc-scoped exception classes.
+  `GET /documents` and `GET /documents/{id}/content`, the sidebar list and download endpoints this
+  feature wires up directly.
+- [specs/006-document-delete/plan.md](specs/006-document-delete/plan.md) —
+  `DELETE /documents/{id}`, the deletion endpoint this feature's sidebar delete action calls.
+- [specs/007-chat-endpoint/plan.md](specs/007-chat-endpoint/plan.md) — `POST /chat`; this feature's
+  `ChatService` is the first real caller of that endpoint, and its `ChatResponse`/`SourceCitation`
+  shapes ([data-model.md](specs/007-chat-endpoint/data-model.md)) are what `ChatMessage`/`Citation`
+  directly mirror.
 
 Governance: [.specify/memory/constitution.md](.specify/memory/constitution.md) v1.4.1 — seven
 principles, Spec-First and TDD first among them; Azure OpenAI is the mandated inference provider;
@@ -38,13 +41,12 @@ v1.4.0 added the Code & Documentation Language Standard (English-only); v1.4.1 g
 Handling & Logging section's status-code wording (a wording fix, no new constraint).
 
 Two constraints that shape this feature's design:
-- The generated answer MUST be built only from retrieved passages that meet the 0.5 similarity
-  threshold; when nothing meets it (including an empty corpus or a document filter matching nothing),
-  the response MUST be the constitution's fixed "documentation does not cover this" wording with no
-  sources — a plain `200`, never confused with the `503 processing_failed`/`provider_unconfigured`
-  outcome of an actual system failure.
-- Every citation in a successful answer MUST be a document-and-page that genuinely had a retrieved
-  passage included in the generation prompt (computed from retrieval, never parsed from the model's
-  own text) — a page-less source shows the fixed `"no page structure"` indicator, never a number or
-  `null`.
+- A citation badge MUST reproduce feature 007's `POST /chat` response exactly — document, page
+  label, and relevance score — never inventing, dropping, or reordering a source (spec.md FR-002,
+  SC-002); document-scoped chat filtering is explicitly out of scope, so every request this feature
+  sends omits `documentIds` (FR-020).
+- No raw backend `error` code or `message` string is ever rendered to the user for any failure
+  (chat, upload, download, delete) — every failure maps through a closed, pre-written lookup table
+  with an explicit fallback, so the UI can never surface backend internals or be left in an
+  unexplained stuck state (spec.md FR-007/FR-011/FR-014/FR-017).
 <!-- SPECKIT END -->

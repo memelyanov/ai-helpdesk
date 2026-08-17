@@ -14,12 +14,26 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('names the application and states PoC functionality is not yet implemented', async () => {
+  it('renders a sidebar region and a main chat region (plan.md two-pane shell)', () => {
     const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('AI Helpdesk');
-    expect(compiled.textContent?.toLowerCase()).toContain('not yet implemented');
+    expect(compiled.querySelector('.sidebar')).toBeTruthy();
+    expect(compiled.querySelector('.main')).toBeTruthy();
+  });
+
+  it('still hosts <app-connection-status> inside the sidebar header', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const sidebar = compiled.querySelector('.sidebar');
+    expect(sidebar?.querySelector('app-connection-status')).toBeTruthy();
+  });
+
+  it('no longer shows the "not yet implemented" placeholder text', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent?.toLowerCase()).not.toContain('not yet implemented');
   });
 });
