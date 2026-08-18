@@ -71,7 +71,11 @@ describe('ChatService (contracts/frontend-service-contract.md)', () => {
   it('sends documentIds: null on every request, never populated (FR-020)', () => {
     service.ask('Any question');
     const req = httpMock.expectOne(CHAT_ENDPOINT);
-    expect(req.request.body).toEqual({ question: 'Any question', documentIds: null });
+    expect(req.request.body).toEqual({
+      question: 'Any question',
+      documentIds: null,
+      includeTrace: true,
+    });
     req.flush({ answer: 'ok', sources: [] });
   });
 
@@ -132,5 +136,85 @@ describe('ChatService (contracts/frontend-service-contract.md)', () => {
       'Second question',
       'Second answer',
     ]);
+  });
+});
+
+describe('ChatService trace collection (010-chat-trace-dialog data-model.md/contracts)', () => {
+  let httpMock: HttpTestingController;
+  let service: ChatService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(ChatService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  it('includeTrace() is true immediately after construction (FR-011)', () => {
+    expect(service.includeTrace()).toBe(true);
+  });
+
+  it('setIncludeTrace() flips includeTrace() synchronously, in both directions', () => {
+    service.setIncludeTrace(false);
+    expect(service.includeTrace()).toBe(false);
+    service.setIncludeTrace(true);
+    expect(service.includeTrace()).toBe(true);
+  });
+
+  it('ask() sends includeTrace: true in the request body by default', () => {
+    service.ask('A question');
+    const req = httpMock.expectOne(CHAT_ENDPOINT);
+    expect(req.request.body).toEqual({
+      question: 'A question',
+      documentIds: null,
+      includeTrace: true,
+    });
+    req.flush({ answer: 'ok', sources: [] });
+  });
+
+  it('ask() sends includeTrace: false after setIncludeTrace(false)', () => {
+    service.setIncludeTrace(false);
+    service.ask('A question');
+    const req = httpMock.expectOne(CHAT_ENDPOINT);
+    expect(req.request.body).toEqual({
+      question: 'A question',
+      documentIds: null,
+      includeTrace: false,
+    });
+    req.flush({ answer: 'ok', sources: [] });
+  });
+
+  it('settles a response with a trace array onto the assistant message unchanged, in order', () => {
+    service.ask('A question');
+    const trace = [
+      { stage: 'request_received', durationMs: 1, detail: { question: 'A question' } },
+      { stage: 'question_embedded', durationMs: 2, detail: { vectorDimensions: 1536 } },
+    ];
+    httpMock.expectOne(CHAT_ENDPOINT).flush({ answer: 'ok', sources: [], trace });
+
+    expect(service.messages()[1].trace).toEqual(trace);
+  });
+
+  it('settles a response with no trace key with trace left undefined', () => {
+    service.ask('A question');
+    httpMock.expectOne(CHAT_ENDPOINT).flush({ answer: 'ok', sources: [] });
+
+    expect(service.messages()[1].trace).toBeUndefined();
+  });
+
+  it('setIncludeTrace() after a message has settled does not alter that message\'s trace (FR-012)', () => {
+    service.ask('A question');
+    const trace = [{ stage: 'request_received', durationMs: 1, detail: {} }];
+    httpMock.expectOne(CHAT_ENDPOINT).flush({ answer: 'ok', sources: [], trace });
+
+    service.setIncludeTrace(false);
+    service.setIncludeTrace(true);
+
+    expect(service.messages()[1].trace).toEqual(trace);
   });
 });

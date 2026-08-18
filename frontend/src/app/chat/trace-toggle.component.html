@@ -1,0 +1,9 @@
+<button
+  type="button"
+  class="trace-toggle"
+  [class.trace-toggle--on]="includeTrace()"
+  [attr.aria-pressed]="includeTrace()"
+  (click)="toggle()"
+>
+  Trace: {{ includeTrace() ? 'On' : 'Off' }}
+</button>

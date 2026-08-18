@@ -2,8 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { MessageBubbleComponent } from './message-bubble.component';
-import { ChatMessage } from '../chat-message';
+import { ChatMessage, ChatTraceStep } from '../chat-message';
 import { DOCUMENTS_CONTENT_BASE } from '../../shared/file-download';
+
+const TRACE: ChatTraceStep[] = [
+  { stage: 'request_received', durationMs: 1, detail: { question: 'A question' } },
+];
 
 describe('MessageBubbleComponent (presentational, FR-002/FR-003/FR-007/FR-018)', () => {
   let httpMock: HttpTestingController;
@@ -138,6 +142,117 @@ describe('MessageBubbleComponent (presentational, FR-002/FR-003/FR-007/FR-018)',
       expect(updatedBadges[0].className).toContain('source-badge--unavailable');
       expect(updatedBadges[0].textContent?.toLowerCase()).toContain('no longer available');
       expect(updatedBadges[1].className).not.toContain('source-badge--unavailable');
+    });
+  });
+
+  describe('trace control (010-chat-trace-dialog FR-001/FR-002/FR-013)', () => {
+    it('renders a trace control when the message has a non-empty trace', () => {
+      const { el } = render({
+        id: '1',
+        role: 'assistant',
+        text: 'An answer',
+        citations: [],
+        status: 'complete',
+        trace: TRACE,
+      });
+
+      const control = el.querySelector('.trace-control');
+      expect(control).toBeTruthy();
+      expect(control?.textContent?.toLowerCase()).toContain('trace');
+    });
+
+    it('renders no trace control when trace is undefined', () => {
+      const { el } = render({
+        id: '1',
+        role: 'assistant',
+        text: 'An answer',
+        citations: [],
+        status: 'complete',
+      });
+      expect(el.querySelector('.trace-control')).toBeFalsy();
+    });
+
+    it('renders no trace control when trace is an empty array', () => {
+      const { el } = render({
+        id: '1',
+        role: 'assistant',
+        text: 'An answer',
+        citations: [],
+        status: 'complete',
+        trace: [],
+      });
+      expect(el.querySelector('.trace-control')).toBeFalsy();
+    });
+
+    it('renders no trace control for a pending message, even with a trace field', () => {
+      const { el } = render({
+        id: '1',
+        role: 'assistant',
+        text: '',
+        citations: [],
+        status: 'pending',
+        trace: TRACE,
+      });
+      expect(el.querySelector('.trace-control')).toBeFalsy();
+    });
+
+    it('renders no trace control for an error message, even with a trace field', () => {
+      const { el } = render({
+        id: '1',
+        role: 'assistant',
+        text: '',
+        citations: [],
+        status: 'error',
+        errorMessage: 'Something went wrong.',
+        trace: TRACE,
+      });
+      expect(el.querySelector('.trace-control')).toBeFalsy();
+    });
+
+    it('opens the trace dialog on click, and closing it returns to closed', () => {
+      const { el, fixture } = render({
+        id: '1',
+        role: 'assistant',
+        text: 'An answer',
+        citations: [],
+        status: 'complete',
+        trace: TRACE,
+      });
+
+      (el.querySelector('.trace-control') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(el.querySelector('dialog')?.hasAttribute('open')).toBe(true);
+
+      (el.querySelector('.trace-dialog__close') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(el.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+    });
+
+    it('keeps two different messages\' dialogs independent — opening one never closes the other (FR-013)', () => {
+      const first = render({
+        id: '1',
+        role: 'assistant',
+        text: 'First answer',
+        citations: [],
+        status: 'complete',
+        trace: TRACE,
+      });
+      const second = render({
+        id: '2',
+        role: 'assistant',
+        text: 'Second answer',
+        citations: [],
+        status: 'complete',
+        trace: TRACE,
+      });
+
+      (first.el.querySelector('.trace-control') as HTMLButtonElement).click();
+      first.fixture.detectChanges();
+      (second.el.querySelector('.trace-control') as HTMLButtonElement).click();
+      second.fixture.detectChanges();
+
+      expect(first.el.querySelector('dialog')?.hasAttribute('open')).toBe(true);
+      expect(second.el.querySelector('dialog')?.hasAttribute('open')).toBe(true);
     });
   });
 });

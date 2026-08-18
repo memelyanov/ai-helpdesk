@@ -98,3 +98,21 @@
   color: #6b7280;
   cursor: default;
 }
+
+/* Visually secondary to both the answer text and the sources list (FR-010) — smaller, muted, no
+   background fill, plain-text affordance rather than a badge. */
+.trace-control {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 11px;
+  color: #888780;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.trace-control:hover {
+  color: #378add;
+}
