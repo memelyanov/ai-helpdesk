@@ -29,18 +29,21 @@ feature 003's `similarity-search-contract.md` column set exactly:
 | `text` | `String` | `chunks.text` — the passage content included in the generation prompt |
 | `distance` | `double` | pgvector cosine distance (`embedding <=> :query_vector`); similarity = `1 - distance` |
 
-At most 4 rows (`TOP_K`), ordered by ascending `distance` (closest match first), for one question —
+At most 5 rows (`TOP_K`), ordered by ascending `distance` (closest match first), for one question —
 never persisted, discarded after the request completes.
 
 ## Internal: retrieval defaults
 
 Fixed, system-wide constants (constitution Query Pipeline section; spec.md Assumptions — not
-per-request tunable in this feature's scope), defined alongside `ChatService`:
+per-request tunable in this feature's scope), defined alongside `ChatService`. **Current values as of
+feature 011 (Retrieval Accuracy Tuning)** — this feature's own
+[data-model.md](../011-retrieval-accuracy-tuning/data-model.md) is the source of truth for these two
+going forward, corrected here so this file doesn't contradict shipped behavior:
 
 | Constant | Value | Requirement |
 |---|---|---|
-| `TOP_K` | 4 | FR-004 |
-| `SIMILARITY_THRESHOLD` | 0.5 (cosine similarity; equivalently `distance <= 0.5`) | FR-005 |
+| `TOP_K` | 5 | FR-004 |
+| `SIMILARITY_THRESHOLD` | 0.35 (cosine similarity; equivalently `distance <= 0.65`) | FR-005 |
 | `MAX_QUESTION_LENGTH` | 1000 (characters) | FR-012, Clarifications Session 2026-08-16 |
 
 ## Response (success or "not covered"): `ChatResponse`
@@ -61,7 +64,7 @@ text, never by status code (research Decision 7).
 | `documentId` | `UUID` | Identifies the source document the same way features 005/006 already do — a caller can pass this straight to `GET /documents/{id}/content` (feature 005) to fetch the original file. |
 | `filename` | `String` | `chunks.source_filename` — the contributing document's name at ingestion time (FR-009). |
 | `page` | `String` | Either the 1-indexed page number as a string (e.g. `"3"`), or the fixed string `"no page structure"` when the source chunk's `pageNumber` is `null` (FR-009, Clarifications Session 2026-08-16). A string, not a nullable integer, precisely so the API surface never represents "no page" as an ambiguous `null`/`0`/missing-field case a caller would have to special-case separately from a real page number. |
-| `score` | `double` | Retrieval confidence — `1 - distance`, rounded to two decimal places; always ≥ 0.5 (`SIMILARITY_THRESHOLD`) for any citation that appears here (FR-009). |
+| `score` | `double` | Retrieval confidence — `1 - distance`, rounded to two decimal places; always ≥ 0.35 (`SIMILARITY_THRESHOLD`) for any citation that appears here (FR-009). |
 
 ## Error: `ChatErrorResponse`
 
@@ -100,7 +103,7 @@ kept as an explicit rule for clarity) would collapse into one.
 - **No persisted `Question`/`Answer`/conversation entity** — every shape above is constructed fresh
   per request and discarded once the HTTP response is sent (spec.md Assumptions: no new persistence,
   single-turn/stateless).
-- **No pagination** on `sources` — bounded by `TOP_K` (at most 4) already, an array is never large
+- **No pagination** on `sources` — bounded by `TOP_K` (at most 5) already, an array is never large
   enough to need it.
 - **No confidence/score field on `ChatErrorResponse`** — an error carries no partial retrieval
   result; FR-013's guarantee is that on failure, the caller gets the error shape only, never a mix of

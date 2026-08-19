@@ -39,11 +39,11 @@ public class ChatService {
 
     private static final Logger log = LoggerFactory.getLogger(ChatService.class);
 
-    /** Bounded number of the most relevant passages retrieved per question (FR-004). */
-    static final int TOP_K = 4;
+    /** Bounded number of the most relevant passages retrieved per question (FR-004, FR-009). */
+    static final int TOP_K = 5;
 
     /** Minimum cosine similarity a retrieved passage must meet to be used (FR-005, inclusive). */
-    static final double SIMILARITY_THRESHOLD = 0.5;
+    static final double SIMILARITY_THRESHOLD = 0.35;
 
     /** Maximum accepted question length, in characters, after trimming (FR-012). */
     public static final int MAX_QUESTION_LENGTH = 1000;

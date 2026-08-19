@@ -1,9 +1,11 @@
 # API Overview
 
-A single-page reference for every HTTP endpoint the ai-helpdesk backend exposes, across all
-shipped features (001–007). This document is generated from the actual controller/DTO source, not
-from the specs alone — where the two ever disagree, the source (and each feature's own
-`contracts/*.md`) is authoritative and this file should be regenerated.
+A single-page reference for every HTTP endpoint the ai-helpdesk backend exposes. The endpoint set
+was established by features 001–007; feature 009 added the opt-in diagnostic trace fields on
+`/chat` documented below, and feature 011 retuned `/chat`'s retrieval constants (no shape change).
+This document is generated from the actual controller/DTO source, not from the specs alone — where
+the two ever disagree, the source (and each feature's own `contracts/*.md`) is authoritative and
+this file should be regenerated.
 
 **Base URL**: `http://localhost:8080` (no context path). All request/response bodies are
 `application/json` unless noted otherwise. There is no authentication layer (PoC scope).
@@ -19,7 +21,7 @@ A companion machine-readable spec lives alongside this file: [openapi.yaml](open
 | GET | `/documents` | List all ingested documents | [005](005-document-listing-download/plan.md) |
 | GET | `/documents/{id}/content` | Download a document's original bytes | [005](005-document-listing-download/plan.md) |
 | DELETE | `/documents/{id}` | Permanently delete a document | [006](006-document-delete/plan.md) |
-| POST | `/chat` | Ask a question, get a grounded, cited answer | [007](007-chat-endpoint/plan.md) |
+| POST | `/chat` | Ask a question, get a grounded, cited answer, optionally with a diagnostic trace | [007](007-chat-endpoint/plan.md), [009](009-chat-diagnostic-trace/plan.md), [011](011-retrieval-accuracy-tuning/plan.md) |
 
 Every error-carrying endpoint shares one two-field error shape: `{ "error": "<code>", "message":
 "<human-readable>" }`. `error` codes never overlap across resources, so a client can dispatch
@@ -68,7 +70,8 @@ Full contract: [health-api.md](001-project-scaffolding/contracts/health-api.md).
 Ingest a file: extract text, chunk it, embed each chunk, store document + chunks.
 
 **Request**: `multipart/form-data`, exactly one `file` part, ≤ 20 MB, non-empty, with a filename.
-Supported types: PDF, DOCX, TXT, MD (see the ingestion contract for the exact list).
+Supported types: `.txt` and `.pdf` only, resolved from content rather than trusted from the
+filename extension (see the ingestion contract for detail).
 
 **Response** `201 Created`:
 
@@ -168,13 +171,17 @@ threshold, with deterministic citations — or an honest "not covered" response.
 ```json
 {
   "question": "Can I expense a taxi from the airport?",
-  "documentIds": ["3fa85f64-5717-4562-b3fc-2c963f66afa6"]
+  "documentIds": ["3fa85f64-5717-4562-b3fc-2c963f66afa6"],
+  "includeTrace": true
 }
 ```
 
 - `question`: required, 1–1000 characters after trimming.
 - `documentIds`: optional. When present and non-empty, restricts retrieval to those documents only.
   Absent, `null`, or `[]` means "search the whole corpus." Every entry must be a valid UUID.
+- `includeTrace`: optional, feature 009. `true` attaches the ordered diagnostic trace of this
+  request's pipeline stages to the response's `trace` field. `null`, absent, or `false` are all
+  equivalent to "no trace," and the response is then byte-identical to the pre-009 two-field shape.
 
 **Response** `200 OK` — one shape for both outcomes:
 
@@ -199,11 +206,21 @@ Grounded answer:
 - `sources` is empty **iff** `answer` equals the fixed not-covered string — never mixed.
 - `sources[].page` is either a 1-indexed page number as a string, or the fixed string
   `"no page structure"` — never `null`, never a bare number.
-- `sources[].score` is `1 − distance`, rounded to two decimals, always ≥ 0.5.
+- `sources[].score` is `1 − distance`, rounded to two decimals, always ≥ 0.35.
 - `sources[].documentId` is the same id `GET /documents/{id}/content` and `DELETE /documents/{id}`
   accept.
 - Citations are computed from retrieval results grouped by `(documentId, pageNumber)` — never
   parsed from the model's answer text.
+- `trace`: present, and non-`null`, only when the request had `includeTrace: true` — an ordered
+  array of at most six steps, one per pipeline stage that actually ran (fewer when the pipeline
+  stopped early, e.g. nothing survived the similarity threshold). Each step is
+  `{ "stage": "<name>", "durationMs": <number>, "detail": { ... } }`, where `stage` is one of
+  `request_received`, `question_embedded`, `vector_search_completed`, `results_filtered`,
+  `prompt_assembled`, `model_response_received`, and `detail` carries stage-specific fields
+  including full raw content (retrieved passage text, the assembled prompt, the raw model
+  response) never summarized or altered. Purely observational — never changes `answer` or
+  `sources`. Full per-stage `detail` key reference:
+  [009's data-model.md](009-chat-diagnostic-trace/data-model.md).
 
 **Errors**:
 

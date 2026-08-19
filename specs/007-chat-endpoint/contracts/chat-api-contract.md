@@ -37,7 +37,7 @@ Content-Type: application/json
 }
 ```
 
-- Returned when at least one retrieved passage meets the 0.5 similarity threshold (FR-006).
+- Returned when at least one retrieved passage meets the 0.35 similarity threshold (FR-006).
 - `sources` lists every distinct document-and-page that contributed a retrieved passage, most similar
   first — never a document that did not contribute (FR-008).
 - A source from a document with no page structure (a plain `.txt` upload) shows `"page": "no page
@@ -61,7 +61,7 @@ Content-Type: application/json
 
 - Returned when no retrieved passage meets the similarity threshold, including: the corpus has never
   had a document ingested, `documentIds` matches no ingested document, or every candidate passage
-  falls below 0.5 similarity (FR-007, spec Edge Cases).
+  falls below 0.35 similarity (FR-007, spec Edge Cases).
 - Always `sources: []` — never a partial or low-confidence source list attached to this outcome.
 - This exact wording is also what the AI provider is separately instructed to produce on its own
   initiative when handed sufficient context but no real answer within it; both paths converge on the

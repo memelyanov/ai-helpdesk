@@ -182,10 +182,15 @@ The PoC is considered successful when:
 4. ~~Design the `documents`/`chunks` database schema in pgvector (original-document storage,
    chunk vector + text + metadata, cascade delete, similarity-search traceability back to the
    source document).~~ **Done** — see `specs/003-document-vector-schema/`.
-5. Implement the ingestion endpoint (Tika → chunking → Azure OpenAI embeddings → write into the
-   schema from step 4).
-6. Implement the chat endpoint (retrieve → augment → Azure OpenAI chat completion → answer + sources).
-7. Build the Angular 21 chat view and document upload view against the REST API (the frontend so
-   far only has the connection-status indicator from step 3, not these PoC-facing views).
-8. Run the evaluation set, tune chunk size and K.
+5. ~~Implement the ingestion endpoint (Tika → chunking → Azure OpenAI embeddings → write into the
+   schema from step 4).~~ **Done** — see `specs/004-document-ingestion-endpoint/`, plus
+   `specs/005-document-listing-download/` and `specs/006-document-delete/` for the read/delete side.
+6. ~~Implement the chat endpoint (retrieve → augment → Azure OpenAI chat completion → answer +
+   sources).~~ **Done** — see `specs/007-chat-endpoint/`.
+7. ~~Build the Angular 21 chat view and document upload view against the REST API.~~ **Done** — see
+   `specs/008-frontend-chat-ui/` (chat view) and the document sidebar built alongside features
+   004-006's endpoints; `specs/009-chat-diagnostic-trace/` and `specs/010-chat-trace-dialog/` later
+   added an inspectable per-request diagnostic trace on top of this.
+8. ~~Run the evaluation set, tune chunk size and K.~~ **Done** — see
+   `specs/011-retrieval-accuracy-tuning/`.
 9. Present at the weekly update.
