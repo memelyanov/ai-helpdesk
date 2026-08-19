@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Splits a document's extracted, per-page text into token-accurate chunks (FR-006, research
- * Decision 3): fixed 800-token target windows with a fixed 100-token (12.5%) overlap, counted via
+ * Decision 3): fixed 500-token target windows with a fixed 63-token (12.6%) overlap, counted via
  * {@code jtokkit}'s {@code cl100k_base} encoding — the same vocabulary
  * {@code text-embedding-3-small} (the constitution's mandated embedding model) is documented
  * against.
@@ -29,8 +29,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class Chunker {
 
-    private static final int TARGET_TOKENS = 800;
-    private static final int OVERLAP_TOKENS = 100;
+    private static final int TARGET_TOKENS = 500;
+    private static final int OVERLAP_TOKENS = 63;
 
     private static final Encoding ENCODING;
 

@@ -18,7 +18,7 @@ import java.util.UUID;
  *                     (spec.md Clarifications Session 2026-08-16, FR-009) — never {@code null},
  *                     never a numeric placeholder.
  * @param score       retrieval confidence — {@code 1 - distance}, rounded to two decimal places;
- *                    always &ge; 0.5 (the similarity threshold) for any citation that appears here.
+ *                    always &ge; 0.35 (the similarity threshold) for any citation that appears here.
  */
 public record SourceCitation(UUID documentId, String filename, String page, double score) {
 

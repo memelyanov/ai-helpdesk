@@ -36,29 +36,29 @@ class ChunkerTest {
             assertThat(chunk.pageNumber()).as("page number carried from the source page").isEqualTo(3);
             int tokenCount = ENCODING.countTokens(chunk.text());
             if (i < chunks.size() - 1) {
-                assertThat(tokenCount).as("every interior chunk is exactly the 800-token target").isEqualTo(800);
+                assertThat(tokenCount).as("every interior chunk is exactly the 500-token target").isEqualTo(500);
             } else {
                 assertThat(tokenCount).as("the final chunk may be shorter, but never exceeds the target")
-                        .isLessThanOrEqualTo(800);
+                        .isLessThanOrEqualTo(500);
             }
         }
 
-        // 10-15% overlap (research Decision 3: 100 of 800 tokens = 12.5%): the last 100 token ids of
-        // each chunk equal the first 100 token ids of the next chunk, by construction.
+        // 10-15% overlap (research Decision 3: 63 of 500 tokens = 12.6%): the last 63 token ids of
+        // each chunk equal the first 63 token ids of the next chunk, by construction.
         for (int i = 0; i < chunks.size() - 1; i++) {
             IntArrayList currentTokens = ENCODING.encode(chunks.get(i).text());
             IntArrayList nextTokens = ENCODING.encode(chunks.get(i + 1).text());
-            List<Integer> tailOfCurrent = lastN(currentTokens, 100);
-            List<Integer> headOfNext = firstN(nextTokens, 100);
-            assertThat(tailOfCurrent).as("chunk %d's trailing 100 tokens overlap chunk %d's leading 100 tokens", i,
+            List<Integer> tailOfCurrent = lastN(currentTokens, 63);
+            List<Integer> headOfNext = firstN(nextTokens, 63);
+            assertThat(tailOfCurrent).as("chunk %d's trailing 63 tokens overlap chunk %d's leading 63 tokens", i,
                     i + 1).isEqualTo(headOfNext);
         }
     }
 
     @Test
-    void shortPageProducesExactlyOneChunkEvenUnderTheFiveHundredTokenTarget() {
+    void shortPageProducesExactlyOneChunkEvenUnderTheTargetTokenCount() {
         String shortText = "This is a short test document with only a handful of words in it.";
-        assertThat(ENCODING.countTokens(shortText)).as("sanity check: shorter than the 500-token band").isLessThan(500);
+        assertThat(ENCODING.countTokens(shortText)).as("sanity check: shorter than the 500-token target").isLessThan(500);
 
         List<ChunkDraft> chunks = chunker.chunk(List.of(new ExtractedPage(1, shortText)));
 

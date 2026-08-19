@@ -51,7 +51,7 @@ import org.testcontainers.utility.DockerImageName;
 /**
  * Full-pipeline integration test against a real Testcontainers {@code pgvector/pgvector:pg18}
  * database for {@code POST /chat}'s retrieval half — proves the real pgvector {@code <=>} query
- * ranks and caps chunks correctly (FR-004), that the 0.5 similarity threshold is genuinely
+ * ranks and caps chunks correctly (FR-004), that the 0.35 similarity threshold is genuinely
  * inclusive (FR-005), that a {@code documentIds} filter actually narrows the candidate set
  * (FR-010, Acceptance Scenario 5), and that a document-store failure surfaces as
  * {@code processing_failed} rather than a silent empty result (User Story 3 Scenario 2) — with
@@ -107,24 +107,25 @@ class ChatRetrievalIT {
     ChatCompletionClient chatCompletionClient;
 
     // -----------------------------------------------------------------------------------------
-    // User Story 1 — real pgvector ranking, TOP_K cap, inclusive threshold boundary (FR-004/005)
+    // User Story 1/2 — real pgvector ranking and the TOP_K cap (FR-004; the inclusive-threshold
+    // boundary concern moved to aCandidateBetweenTheOldAndNewThresholdIsNowIncludedInclusively)
     // -----------------------------------------------------------------------------------------
 
     @Test
-    void ranksChunksBySimilarityCapsAtTopKAndIncludesTheInclusiveThresholdBoundary() throws Exception {
+    void ranksChunksBySimilarityAndCapsAtTopKWhenAllCandidatesClearTheRelevanceBar() throws Exception {
         UUID documentId = insertDocument("rank-it.txt");
-        // Query vector: unit vector along dim 100. Five chunks in the same orthogonal slice, at
-        // decreasing similarity: 1.0, 1/sqrt(2)~=0.707, 1/sqrt(3)~=0.577, 1/2=0.5 (exact — both the
-        // query and this chunk use only integer 0/1 components, so pgvector's float32 division
-        // 1/2 is bit-exact, making this a genuine, non-flaky boundary case), 1/sqrt(5)~=0.447.
+        // Query vector: unit vector along dim 100. Six chunks in the same orthogonal slice, at
+        // decreasing similarity: 1.0, 1/sqrt(2)~=0.707, 1/sqrt(3)~=0.577, 1/2=0.5, 1/sqrt(5)~=0.447,
+        // 1/sqrt(6)~=0.408 — every one comfortably above the new 0.35 relevance bar, so none is
+        // excluded by relevance, only the weakest (6th) by the TOP_K=5 cap.
         float[] query = unitVector(100);
         insertChunk(documentId, 1, "rank-it.txt", 1, "closest passage", axisSum(100));
         insertChunk(documentId, 2, "rank-it.txt", 2, "second passage", axisSum(100, 101));
         insertChunk(documentId, 3, "rank-it.txt", 3, "third passage", axisSum(100, 101, 102));
-        insertChunk(documentId, 4, "rank-it.txt", 4, "fourth passage, exactly at threshold",
-                axisSum(100, 101, 102, 103));
-        insertChunk(documentId, 5, "rank-it.txt", 5, "fifth passage, excluded by TOP_K cap",
-                axisSum(100, 101, 102, 103, 104));
+        insertChunk(documentId, 4, "rank-it.txt", 4, "fourth passage", axisSum(100, 101, 102, 103));
+        insertChunk(documentId, 5, "rank-it.txt", 5, "fifth passage", axisSum(100, 101, 102, 103, 104));
+        insertChunk(documentId, 6, "rank-it.txt", 6, "sixth passage, excluded by TOP_K cap",
+                axisSum(100, 101, 102, 103, 104, 105));
         when(embeddingClient.embedQuery(anyString())).thenReturn(query);
         when(chatCompletionClient.complete(any(), any()))
                 .thenReturn(new ChatCompletionResult("system prompt", "prompt", "A grounded answer."));
@@ -132,15 +133,13 @@ class ChatRetrievalIT {
         JsonNode body = postChat("Question scoped to the rank-it corpus", null);
 
         JsonNode sources = body.get("sources");
-        assertThat(sources).as("TOP_K=4 caps the result even though 5 chunks are above threshold")
-                .hasSize(4);
+        assertThat(sources).as("TOP_K=5 caps the result even though 6 chunks are above the relevance bar")
+                .hasSize(5);
         List<String> pages = List.of(sources.get(0).get("page").asText(), sources.get(1).get("page").asText(),
-                sources.get(2).get("page").asText(), sources.get(3).get("page").asText());
-        assertThat(pages).as("closest-first order, and the 5th (weakest) chunk never reaches the app layer")
-                .containsExactly("1", "2", "3", "4");
-        assertThat(sources.get(3).get("score").asDouble())
-                .as("the exact-0.5 chunk is included, not discarded — the threshold is inclusive (FR-005)")
-                .isEqualTo(0.5);
+                sources.get(2).get("page").asText(), sources.get(3).get("page").asText(),
+                sources.get(4).get("page").asText());
+        assertThat(pages).as("closest-first order, and the 6th (weakest) chunk never reaches the app layer")
+                .containsExactly("1", "2", "3", "4", "5");
     }
 
     // -----------------------------------------------------------------------------------------
@@ -176,9 +175,12 @@ class ChatRetrievalIT {
     void everyCandidateBelowThresholdReturnsTheFixedNotCoveredResponseWithoutCallingCompletion() throws Exception {
         UUID documentId = insertDocument("below-threshold-it.txt");
         float[] query = unitVector(130);
-        // cos = 1/sqrt(5) ~= 0.447, safely below the 0.5 threshold with no float-precision risk.
+        // cos = 1/sqrt(10) ~= 0.316, safely below the 0.35 threshold with no float-precision risk.
+        // (Ten axis terms, not five: five terms gives 1/sqrt(5) ~= 0.447, which was safely below the
+        // *old* 0.5 threshold but sits *above* the *new* 0.35 one — this fixture must clear the new
+        // bar with room to spare, research Decision 6.)
         insertChunk(documentId, 1, "below-threshold-it.txt", 1, "too weak to count",
-                axisSum(130, 131, 132, 133, 134));
+                axisSum(130, 131, 132, 133, 134, 135, 136, 137, 138, 139));
         when(embeddingClient.embedQuery(anyString())).thenReturn(query);
 
         JsonNode body = postChat("Question with only weak matches", null);
@@ -186,6 +188,40 @@ class ChatRetrievalIT {
         assertThat(body.get("answer").asText()).isEqualTo(ChatResponse.NOT_COVERED_ANSWER);
         assertThat(body.get("sources")).isEmpty();
         verify(chatCompletionClient, never()).complete(any(), any());
+    }
+
+    @Test
+    void aCandidateBetweenTheOldAndNewThresholdIsNowIncludedInclusively() throws Exception {
+        UUID documentId = insertDocument("boundary-it.txt");
+        float[] query = unitVector(160);
+        // 0.35 isn't 1/sqrt(k) for any small integer k the way 0.5 = 1/sqrt(4) is, and — unlike 0.5 —
+        // it isn't a power-of-two fraction either, so no float32/float64 construction can hit it
+        // bit-exactly at all. Building the vector at cosine 0.35 exactly was tried and found to be
+        // genuinely flaky: pgvector's float32 <=> computation lands a few ulps to either side of the
+        // mathematical value, and production's strict (non-epsilon) `distance <= 1 - threshold`
+        // comparison sometimes excluded it. Using 0.351 instead gives a safety margin (~1e-3) far
+        // larger than that float noise (~1e-7), so the chunk reliably survives the strict filter,
+        // while still rounding to the same displayed score (0.35, the threshold itself — production
+        // rounds score to two decimals) that the assertion below checks.
+        insertChunk(documentId, 1, "boundary-it.txt", 1, "right at the new relevance bar",
+                cosineVector(160, 0.351f));
+        // Comfortably below 0.35 (reuses the below-threshold test's ten-term construction on a
+        // disjoint axis slice): 1/sqrt(10) ~= 0.316.
+        insertChunk(documentId, 2, "boundary-it.txt", 2, "still too weak even under the new bar",
+                axisSum(161, 162, 163, 164, 165, 166, 167, 168, 169, 170));
+        when(embeddingClient.embedQuery(anyString())).thenReturn(query);
+        when(chatCompletionClient.complete(any(), any()))
+                .thenReturn(new ChatCompletionResult("system prompt", "prompt", "A grounded answer."));
+
+        JsonNode body = postChat("Question scoped to the boundary-it corpus", null);
+
+        JsonNode sources = body.get("sources");
+        assertThat(sources).as("only the exactly-0.35 chunk survives — the weaker one stays excluded")
+                .hasSize(1);
+        assertThat(sources.get(0).get("page").asText()).isEqualTo("1");
+        assertThat(sources.get(0).get("score").asDouble())
+                .as("the new 0.35 threshold is inclusive, exactly like the old 0.5 one was (FR-005)")
+                .isCloseTo(0.35, org.assertj.core.data.Offset.offset(0.0001));
     }
 
     @Test
@@ -255,6 +291,20 @@ class ChatRetrievalIT {
         for (int dimension : dimensions) {
             v[dimension] = 1.0f;
         }
+        return v;
+    }
+
+    /**
+     * A unit-length vector whose cosine similarity to {@code unitVector(dimension)} is exactly
+     * {@code cosine}: {@code v[dimension] = cosine}, {@code v[dimension + 1] = sqrt(1 - cosine^2)},
+     * zero elsewhere. Used only where the target similarity isn't {@code 1/sqrt(k)} for any small
+     * integer {@code k} (e.g. {@code 0.35}), so the bit-exact integer-only {@link #axisSum} technique
+     * doesn't apply.
+     */
+    private static float[] cosineVector(int dimension, float cosine) {
+        float[] v = new float[EMBEDDING_DIMENSIONS];
+        v[dimension] = cosine;
+        v[dimension + 1] = (float) Math.sqrt(1 - cosine * cosine);
         return v;
     }
 
