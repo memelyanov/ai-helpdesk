@@ -1,0 +1,191 @@
+.trace-dialog {
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  width: min(720px, 90vw);
+  max-height: min(85vh, 800px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.trace-dialog::backdrop {
+  background: rgba(44, 44, 42, 0.5);
+}
+
+.trace-dialog__content {
+  display: flex;
+  flex-direction: column;
+  max-height: min(85vh, 800px);
+}
+
+.trace-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e5e0;
+  flex-shrink: 0;
+}
+
+.trace-dialog__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c2c2a;
+}
+
+.trace-dialog__close {
+  border: 1px solid #e5e5e0;
+  background: #ffffff;
+  color: #2c2c2a;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.trace-dialog__close:hover {
+  background: #f9f8f5;
+}
+
+.trace-dialog__stages {
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trace-stage {
+  border: 1px solid #e5e5e0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #ffffff;
+}
+
+.trace-stage__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.trace-stage__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c2c2a;
+}
+
+.trace-stage__duration {
+  font-size: 11px;
+  color: #888780;
+}
+
+.trace-field {
+  font-size: 13px;
+  color: #2c2c2a;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.trace-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.trace-verbatim {
+  background: #f9f8f5;
+  border: 1px solid #e5e5e0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 4px 0 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.trace-copy {
+  border: 1px solid #b5d4f4;
+  background: #e6f1fb;
+  color: #185fa5;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.trace-copy:hover {
+  background: #378add;
+  border-color: #378add;
+  color: white;
+}
+
+.trace-passages {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trace-passage {
+  background: #f9f8f5;
+  border: 1px solid #e5e5e0;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.trace-passage__meta {
+  font-size: 11px;
+  color: #888780;
+  margin-bottom: 4px;
+}
+
+.trace-passage__text {
+  font-size: 12px;
+  color: #2c2c2a;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Not-reached stages: muted background AND an explicit textual label (below) — the distinction is
+   never color-only (FR-005). Forward-looking dark-theme note: this app has no dark theme today
+   (spec.md Assumptions), so only the light-palette contrast below is currently verifiable. */
+.trace-stage--not-reached {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.trace-stage--not-reached .trace-stage__title {
+  color: #6b7280;
+}
+
+.trace-not-reached-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #4b5563;
+  background: #e5e7eb;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-top: 0;
+}
+
+.trace-not-reached-reason {
+  color: #6b7280;
+}
+
+@media (max-width: 600px) {
+  .trace-dialog {
+    width: 95vw;
+  }
+}

@@ -1,19 +1,25 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-[specs/009-chat-diagnostic-trace/plan.md](specs/009-chat-diagnostic-trace/plan.md)
+[specs/010-chat-trace-dialog/plan.md](specs/010-chat-trace-dialog/plan.md)
 
 Supporting design artifacts for the active feature:
-- [spec.md](specs/009-chat-diagnostic-trace/spec.md) — three prioritized user stories (finish the ad hoc backend logging so every chat pipeline step is reliably recorded; expose that same detail via an opt-in `POST /chat` trace; leave default behavior byte-identical) finishing manual logging work already started across `ChatService`/`ChatRetrievalRepository`/`ChatCompletionClient`/`EmbeddingClient`/`AzureOpenAiProperties`; two Clarifications entries (Session 2026-08-17: API-only, no new chat-UI panel in this feature; trace steps carry full raw content — passage text, exact prompt, raw model response — not just summarized metadata)
-- [research.md](specs/009-chat-diagnostic-trace/research.md) — 6 decisions: a per-request correlation id via SLF4J MDC (not a parameter threaded through every log call), `ChatTraceStep.detail` as a small per-stage `Map<String, Object>` rather than six typed records, `ChatCompletionClient.complete(...)` returning a new `ChatCompletionResult` record so `ChatService` sees the exact prompt/response text, persistent logs staying at summary level always while full raw content is API-response-only (constitution's "request/response summaries" wording), `ChatService` as the single place that both builds the trace and emits every stage-summary log line (superseding the ad hoc `.forEach` dumps and the misattributed `AzureOpenAiProperties` logger), and a new `ChatServiceTest` unit test (first direct, mocked-collaborator test of `ChatService`)
-- [data-model.md](specs/009-chat-diagnostic-trace/data-model.md) — no persistence; `ChatRequest`/`ChatResponse` each gain one optional field (`includeTrace` in, `trace` out), the new in-memory `ChatTraceStep`/`ChatCompletionResult` shapes, and a table of exactly what reaches the persistent log vs. the opt-in trace
-- [contracts/chat-diagnostic-trace-contract.md](specs/009-chat-diagnostic-trace/contracts/chat-diagnostic-trace-contract.md) — the additive delta on top of feature 007's `POST /chat` contract, which remains the complete baseline
-- [quickstart.md](specs/009-chat-diagnostic-trace/quickstart.md) — bring-up (existing feature 007 prerequisites), per-user-story manual validation including a log-correlation check and a credential-safety check, `mvnw test` for the automated suite
+- [spec.md](specs/010-chat-trace-dialog/spec.md) — three prioritized user stories (inspect a response's diagnostic trace via a dialog opened from a control under its sources panel; understand a short-circuited trace where the pipeline stopped early, with the un-reached stages clearly marked instead of silently missing; turn diagnostic trace collection off when it isn't needed) turning feature 009's opt-in, API-only trace into an actual frontend `TraceDialogComponent`; one Clarifications entry (Session 2026-08-17: trace collection is on by default — opt-out via a visible toggle — reversing the initial opt-in/off-by-default draft)
+- [research.md](specs/010-chat-trace-dialog/research.md) — 6 decisions: a native `<dialog>` element with every close path (button/backdrop/Escape) funneled through one method that falls back to a direct emission when `HTMLDialogElement.showModal`/`close` are unavailable (confirmed missing in this repo's pinned jsdom 28.1.0, so component tests exercise the fallback instead of the real native behavior), `ChatService` owning `includeTrace` state with a self-contained `TraceToggleComponent` reading/writing it directly (mirrors `ConnectionStatusComponent`/`HealthService`), `ChatTraceStep.detail` staying a loosely-typed `Record<string, unknown>` with all stage-specific interpretation inside `TraceDialogComponent` (mirrors 009's own `Map<String,Object>` choice), `ChatMessage.trace` as a direct pass-through of `ChatResponse.trace` with no mapping function, client-side derivation of "not reached" stages from a fixed six-stage order positionally zipped against the trace array, and feature-detected `navigator.clipboard.writeText` with a silent no-op fallback for the copy affordance
+- [data-model.md](specs/010-chat-trace-dialog/data-model.md) — no persistence; new client-side `ChatTraceStep` type, `ChatMessage`/`ChatRequestBody`/`ChatResponse` each gain one field (`trace` out/in, `includeTrace` in), `ChatService` gains `includeTrace`/`setIncludeTrace()`, and `TraceDialogComponent`'s derived `displayedStages` view model
+- [contracts/frontend-trace-contract.md](specs/010-chat-trace-dialog/contracts/frontend-trace-contract.md) — the additive delta on top of feature 008's frontend service contract; `TraceDialogComponent`/`TraceToggleComponent`'s public API and `MessageBubbleComponent`'s extended rendering contract
+- [quickstart.md](specs/010-chat-trace-dialog/quickstart.md) — bring-up (existing feature 008/009 prerequisites), per-user-story manual validation including the native Escape/backdrop-dismissal checks the automated suite can't cover under jsdom, `npm test` for the automated suite
 
 Prior features, still the source of truth for their own scope:
-- [specs/008-frontend-chat-ui/plan.md](specs/008-frontend-chat-ui/plan.md) — the Angular chat UI this
-  feature's backend-only change does not touch (spec.md Clarifications: API-only, no UI panel);
-  `ChatService`'s frontend contract is unchanged by this feature.
+- [specs/009-chat-diagnostic-trace/plan.md](specs/009-chat-diagnostic-trace/plan.md) — the backend
+  `POST /chat` `includeTrace`/`trace` contract this feature is the first UI consumer of; its
+  `ChatTraceStep` stage vocabulary and per-stage `detail` keys
+  ([data-model.md](specs/009-chat-diagnostic-trace/data-model.md)) are what this feature's
+  `TraceDialogComponent` renders verbatim, never re-derived.
+- [specs/008-frontend-chat-ui/plan.md](specs/008-frontend-chat-ui/plan.md) — the Angular chat UI
+  (`ChatService`, `MessageBubbleComponent`, the `chat-header`) this feature extends rather than
+  replaces; its `ChatMessage`/`Citation` pass-through pattern is what this feature's `ChatMessage.trace`
+  field follows.
 - [specs/001-project-scaffolding/plan.md](specs/001-project-scaffolding/plan.md) — database, backend,
   frontend skeleton; [contracts/health-api.md](specs/001-project-scaffolding/contracts/health-api.md)
   — the health endpoint response shape.
@@ -44,10 +50,11 @@ v1.4.0 added the Code & Documentation Language Standard (English-only); v1.4.1 g
 Handling & Logging section's status-code wording (a wording fix, no new constraint).
 
 Two constraints that shape this feature's design:
-- Enabling `includeTrace` MUST NOT change `answer`, `sources`, or any other existing `ChatResponse`
-  field's value, and its absence/false MUST leave the response byte-identical to feature 007's
-  original contract — no `"trace"` key at all, not even `null` (spec.md FR-010/FR-016).
-- Full raw content (retrieved passage text, the exact prompt, the raw model response) belongs only in
-  the opt-in API response, never in the persistent server log — logs stay at the constitution's
-  mandated "summary" level for every request regardless of `includeTrace` (research.md Decision 4).
+- The trace dialog is read-only and purely presentational — it MUST NOT alter `answer`, `sources`, or
+  any other part of the conversation, and every piece of content it shows (passage text, the assembled
+  prompt, the raw model response) MUST render exactly as `POST /chat` returned it, never summarized,
+  reworded, or re-derived client-side (spec.md FR-004/FR-007).
+- Diagnostic trace collection is on by default (`includeTrace: true` sent on every request unless the
+  user turns it off via the trace toggle) — reversed from the initial opt-in/off-by-default draft by
+  `/speckit-clarify` (spec.md Clarifications, Session 2026-08-17; FR-011/FR-012).
 <!-- SPECKIT END -->

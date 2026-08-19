@@ -20,6 +20,17 @@ export interface Citation {
   available: boolean;
 }
 
+/**
+ * One recorded pipeline stage, exactly as `POST /chat` returns it — a direct structural mirror of
+ * 009's own `ChatTraceStep` (010-chat-trace-dialog/data-model.md `ChatTraceStep`, research.md
+ * Decision 3). `detail` stays loosely typed; per-stage interpretation lives in `TraceDialogComponent`.
+ */
+export interface ChatTraceStep {
+  stage: string;
+  durationMs: number;
+  detail: Record<string, unknown>;
+}
+
 /** One entry in the conversation, in submission order (FR-018, data-model.md `ChatMessage`). */
 export interface ChatMessage {
   id: string;
@@ -28,12 +39,19 @@ export interface ChatMessage {
   citations: Citation[];
   status: ChatMessageStatus;
   errorMessage?: string;
+  /** Present exactly when `ChatResponse.trace` was present on the response that settled this
+   * message (010-chat-trace-dialog FR-002) — a direct pass-through, never re-derived (research.md
+   * Decision 4). `undefined` for every `role: 'user'` message. */
+  trace?: ChatTraceStep[];
 }
 
 /** `POST /chat`'s request body shape (007-chat-endpoint/contracts/chat-api-contract.md). */
 export interface ChatRequestBody {
   question: string;
   documentIds: null;
+  /** Always sent explicitly — `true` by default, `false` after the trace toggle is turned off
+   * (FR-011/FR-012, data-model.md `ChatRequestBody`). */
+  includeTrace: boolean;
 }
 
 /** One entry in `ChatResponse.sources` (007's data-model.md `SourceCitation`). */
@@ -48,6 +66,9 @@ export interface SourceCitation {
 export interface ChatResponse {
   answer: string;
   sources: SourceCitation[];
+  /** Present exactly when the request had `includeTrace: true` (009's FR-010/FR-011) —
+   * `undefined` when the JSON key is absent, never `null`. */
+  trace?: ChatTraceStep[];
 }
 
 /**

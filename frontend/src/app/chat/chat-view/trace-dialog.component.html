@@ -1,0 +1,125 @@
+<dialog
+  #dialogEl
+  class="trace-dialog"
+  [attr.open]="open() ? '' : null"
+  [attr.aria-label]="dialogLabel()"
+  (click)="onBackdropClick($event)"
+  (close)="closed.emit()"
+>
+  <div class="trace-dialog__content">
+    <header class="trace-dialog__header">
+      <h2 class="trace-dialog__title">Diagnostic trace</h2>
+      <button type="button" class="trace-dialog__close" (click)="requestClose()">Close</button>
+    </header>
+
+    <div class="trace-dialog__stages">
+      @for (displayed of displayedStages(); track displayed.stage) {
+        @if (displayed.ran) {
+          <section class="trace-stage" [attr.data-stage]="displayed.stage">
+            <div class="trace-stage__header">
+              <h3 class="trace-stage__title">{{ STAGE_LABELS[displayed.stage] }}</h3>
+              <span class="trace-stage__duration">{{ displayed.step.durationMs }} ms</span>
+            </div>
+
+            @switch (displayed.stage) {
+              @case ('request_received') {
+                <p class="trace-field"><strong>Question:</strong> {{ displayed.step.detail['question'] }}</p>
+              }
+              @case ('question_embedded') {
+                <p class="trace-field">
+                  <strong>Embedding size:</strong> {{ displayed.step.detail['vectorDimensions'] }} dimensions
+                </p>
+              }
+              @case ('vector_search_completed') {
+                <p class="trace-field">
+                  <strong>Candidates retrieved:</strong> {{ displayed.step.detail['candidateCount'] }}
+                </p>
+                <ul class="trace-passages">
+                  @for (
+                    candidate of $any(displayed.step.detail['candidates']);
+                    track candidate.chunkId
+                  ) {
+                    <li class="trace-passage">
+                      <div class="trace-passage__meta">
+                        {{ candidate.sourceFilename }} · p.{{ candidate.page }} · similarity
+                        {{ candidate.similarity }}
+                      </div>
+                      <p class="trace-passage__text">{{ candidate.text }}</p>
+                    </li>
+                  }
+                </ul>
+              }
+              @case ('results_filtered') {
+                <p class="trace-field">
+                  <strong>Kept:</strong> {{ displayed.step.detail['survivorCount'] }} ·
+                  <strong>Discarded:</strong> {{ displayed.step.detail['discardedCount'] }} ·
+                  <strong>Threshold:</strong> {{ displayed.step.detail['threshold'] }}
+                </p>
+                <ul class="trace-passages">
+                  @for (
+                    survivor of $any(displayed.step.detail['survivors']);
+                    track survivor.chunkId
+                  ) {
+                    <li class="trace-passage">
+                      <div class="trace-passage__meta">
+                        {{ survivor.sourceFilename }} · p.{{ survivor.page }} · similarity
+                        {{ survivor.similarity }}
+                      </div>
+                      <p class="trace-passage__text">{{ survivor.text }}</p>
+                    </li>
+                  }
+                </ul>
+              }
+              @case ('prompt_assembled') {
+                <p class="trace-field"><strong>System prompt:</strong></p>
+                <pre class="trace-verbatim">{{ displayed.step.detail['systemPrompt'] }}</pre>
+                <div class="trace-field-header">
+                  <strong>Assembled prompt:</strong>
+                  <button
+                    type="button"
+                    class="trace-copy"
+                    data-copy="prompt"
+                    (click)="copy('prompt', displayed.step.detail['prompt'])"
+                  >
+                    {{ copyFeedback() === 'prompt' ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+                <pre class="trace-verbatim">{{ displayed.step.detail['prompt'] }}</pre>
+              }
+              @case ('model_response_received') {
+                <p class="trace-field">
+                  <strong>Outcome:</strong> {{ displayed.step.detail['outcome'] }}
+                </p>
+                <div class="trace-field-header">
+                  <strong>Raw model response:</strong>
+                  <button
+                    type="button"
+                    class="trace-copy"
+                    data-copy="response"
+                    (click)="copy('response', displayed.step.detail['rawResponse'])"
+                  >
+                    {{ copyFeedback() === 'response' ? 'Copied' : 'Copy' }}
+                  </button>
+                </div>
+                <pre class="trace-verbatim">{{ displayed.step.detail['rawResponse'] }}</pre>
+              }
+            }
+          </section>
+        } @else {
+          <section
+            class="trace-stage trace-stage--not-reached"
+            [attr.data-stage]="displayed.stage"
+          >
+            <div class="trace-stage__header">
+              <h3 class="trace-stage__title">{{ STAGE_LABELS[displayed.stage] }}</h3>
+            </div>
+            <p class="trace-field trace-not-reached-label">Not reached</p>
+            <p class="trace-field trace-not-reached-reason">
+              {{ notReachedReason(displayedStages()) }}
+            </p>
+          </section>
+        }
+      }
+    </div>
+  </div>
+</dialog>

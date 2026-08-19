@@ -41,6 +41,16 @@
           </div>
         </div>
       }
+      @if (hasTrace()) {
+        <button type="button" class="trace-control" (click)="openTraceDialog()">
+          View diagnostic trace
+        </button>
+        <app-trace-dialog
+          [steps]="message().trace ?? []"
+          [open]="traceDialogOpen()"
+          (closed)="onTraceDialogClosed()"
+        />
+      }
     }
   </div>
 </div>

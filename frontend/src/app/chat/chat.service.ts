@@ -29,9 +29,19 @@ export class ChatService {
 
   private readonly _messages: WritableSignal<ChatMessage[]> = signal([]);
   private readonly _pending: WritableSignal<boolean> = signal(false);
+  /** On by default (FR-011, data-model.md `ChatService` state) — read fresh on every `ask()` call,
+   * never "locked in" for the rest of a session (research.md Decision 2). */
+  private readonly _includeTrace: WritableSignal<boolean> = signal(true);
 
   readonly messages: Signal<ChatMessage[]> = this._messages.asReadonly();
   readonly pending: Signal<boolean> = this._pending.asReadonly();
+  readonly includeTrace: Signal<boolean> = this._includeTrace.asReadonly();
+
+  /** Turns diagnostic trace collection off (or back on) for messages sent from this point forward.
+   * Never touches `messages` — an already-settled `ChatMessage.trace` is unaffected (FR-012). */
+  setIncludeTrace(value: boolean): void {
+    this._includeTrace.set(value);
+  }
 
   /**
    * No-ops (no state change, no HTTP call) for a blank/whitespace-only or over-length question
@@ -61,7 +71,11 @@ export class ChatService {
     this._messages.set([...this._messages(), userMessage, assistantMessage]);
     this._pending.set(true);
 
-    const body: ChatRequestBody = { question: trimmed, documentIds: null };
+    const body: ChatRequestBody = {
+      question: trimmed,
+      documentIds: null,
+      includeTrace: this.includeTrace(),
+    };
     this.http.post<ChatResponse>(CHAT_ENDPOINT, body).subscribe({
       next: (response) => this.settle(assistantMessage.id, response),
       error: (error: unknown) => this.settleError(assistantMessage.id, error),
@@ -73,6 +87,7 @@ export class ChatService {
       status: 'complete',
       text: response.answer,
       citations: mapSourcesToCitations(response.sources),
+      trace: response.trace,
     });
     this._pending.set(false);
   }
