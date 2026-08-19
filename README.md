@@ -3,13 +3,16 @@
 An AI helpdesk chatbot that answers natural-language questions about a company's internal
 documents (`.txt` / `.pdf`), grounded in the documents themselves and citing its sources.
 
-**Status: runnable skeleton.** A three-part scaffold now exists and runs — a containerised
-PostgreSQL database with the `vector` extension, a Spring Boot backend exposing a health check,
-and an Angular placeholder frontend that polls that health check and shows whether the backend is
-reachable — but no PoC functionality (document upload, chunking, embedding, retrieval, answer
-generation) is implemented yet. **Azure OpenAI credentials are not required** to run the scaffold;
-the backend starts and serves with them absent, reporting the provider as unconfigured. See
-[Setup](#setup) below.
+**Status: working PoC.** The full retrieve → augment → generate pipeline is implemented and
+running end to end: upload a `.txt` or `.pdf` document, it's parsed, chunked and embedded (Azure
+OpenAI); ask a question in the Angular chat view and get a grounded answer with
+source citations, or an honest "not covered" response when nothing relevant was found. A
+diagnostic trace of each pipeline stage can be inspected per answer, and can be turned off. The
+document sidebar supports listing, downloading and deleting ingested documents, and a
+connection-status indicator shows whether the backend is reachable. **Azure OpenAI credentials are
+not required** to build, start or test the app — everything starts and the automated test suites
+pass without them; only real ingestion (embeddings) and real chat answers need them, and their
+absence is reported explicitly rather than failing silently. See [Setup](#setup) below.
 
 Proof of concept for Jira ticket
 [EPMGDPL-3139](https://jiraeu.epam.com/browse/EPMGDPL-3139) — *[Week 1] Java General Task 2 —
@@ -38,33 +41,56 @@ Matching happens on *meaning* rather than exact words, and every answer is trace
 document it came from. When retrieval finds nothing relevant, the assistant says so rather than
 inventing an answer.
 
-## Planned stack
+## Stack
 
 | Layer | Choice |
 |---|---|
 | Language / runtime | Java 17, Spring Boot 3 |
-| RAG orchestration | Spring AI (alt: LangChain4j) |
+| RAG orchestration | Spring AI |
 | LLM & embeddings | Azure OpenAI — a chat deployment (`gpt-4o-mini` class) and a separate embedding deployment (`text-embedding-3-small`) |
-| Vector database | pgvector on PostgreSQL (alt: Chroma / Qdrant) |
+| Vector database | pgvector on PostgreSQL |
 | Document parsing | Apache Tika |
-| API | Spring Web REST — `POST /documents`, `POST /chat` |
-| Frontend | Angular 21 — chat view + document upload view |
+| API | Spring Web REST — see [Endpoints](#endpoints) below |
+| Frontend | Angular 21 — chat view (with a diagnostic trace dialog) + document sidebar (upload/list/download/delete) |
 | Infra | PostgreSQL/pgvector in Docker; backend and frontend run locally |
+
+## Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/actuator/health` | Liveness + dependency status (database, Azure OpenAI configuration) |
+| POST | `/documents` | Ingest a `.txt`/`.pdf` document — parse, chunk, embed, store |
+| GET | `/documents` | List all ingested documents |
+| GET | `/documents/{id}/content` | Download a document's original bytes |
+| DELETE | `/documents/{id}` | Permanently delete a document and its chunks |
+| POST | `/chat` | Ask a question; get a grounded, cited answer (or "not covered"), optionally with a diagnostic trace |
+
+Full request/response shapes, error codes and examples: [`specs/api-overview.md`](specs/api-overview.md)
+(a companion machine-readable [`openapi.yaml`](specs/openapi.yaml) lives alongside it).
 
 ## Current contents
 
 | Path | Contents |
 |---|---|
-| `backend/` | Spring Boot 3 service — health check, Azure OpenAI configuration status, CORS-open for the frontend's origin; no PoC endpoints yet |
-| `frontend/` | Angular 21 placeholder application — polls the backend health check and shows a connection-status indicator (healthy / degraded / unreachable) |
+| `backend/` | Spring Boot 3 service — health check, document ingestion/listing/download/delete, the `/chat` retrieve-augment-generate pipeline with diagnostic tracing, CORS-open for the frontend's origin |
+| `frontend/` | Angular 21 application — chat view with source citations and a trace dialog/toggle, a document sidebar (upload/list/download/delete), and a connection-status indicator (healthy / degraded / unreachable) |
 | `db/init/` | Database init scripts — enable the `vector` extension, then create the `documents` and `chunks` tables (see [Database schema](#database-schema-dbinitsql) below) |
 | `docker-compose.yml` | The database service (backend and frontend run on the host, not in containers) |
 | `.env.example` | Committed template for `.env` — database credentials and the four Azure OpenAI variables |
 | [`docs/poc-concept.md`](docs/poc-concept.md) | Full PoC concept: problem, scenario, architecture, tooling, risks, success criteria, presentation outline |
 | [`sample-data/`](sample-data/README.md) | The synthetic corpus, the evaluation set, and the PDF build script |
-| [`specs/001-project-scaffolding/`](specs/001-project-scaffolding/spec.md) | Spec, plan and contracts for this scaffold, including [`quickstart.md`](specs/001-project-scaffolding/quickstart.md), a full manual validation pass |
-| [`specs/002-frontend-health-wire/`](specs/002-frontend-health-wire/spec.md) | Spec, plan and contracts for the frontend's connection-status indicator, including its own [`quickstart.md`](specs/002-frontend-health-wire/quickstart.md) |
-| [`specs/003-document-vector-schema/`](specs/003-document-vector-schema/spec.md) | Spec, plan and contracts for the `documents`/`chunks` database schema, including its own [`quickstart.md`](specs/003-document-vector-schema/quickstart.md) |
+| [`specs/api-overview.md`](specs/api-overview.md) / [`specs/openapi.yaml`](specs/openapi.yaml) | Single-page reference and machine-readable spec for every HTTP endpoint above |
+| [`specs/001-project-scaffolding/`](specs/001-project-scaffolding/spec.md) | Database/backend/frontend scaffold, including [`quickstart.md`](specs/001-project-scaffolding/quickstart.md) |
+| [`specs/002-frontend-health-wire/`](specs/002-frontend-health-wire/spec.md) | The frontend connection-status indicator |
+| [`specs/003-document-vector-schema/`](specs/003-document-vector-schema/spec.md) | The `documents`/`chunks` pgvector schema |
+| [`specs/004-document-ingestion-endpoint/`](specs/004-document-ingestion-endpoint/spec.md) | `POST /documents` — parse, chunk, embed, store |
+| [`specs/005-document-listing-download/`](specs/005-document-listing-download/spec.md) | `GET /documents`, `GET /documents/{id}/content` |
+| [`specs/006-document-delete/`](specs/006-document-delete/spec.md) | `DELETE /documents/{id}` |
+| [`specs/007-chat-endpoint/`](specs/007-chat-endpoint/spec.md) | `POST /chat` — retrieve → threshold → augment → generate, with citations |
+| [`specs/008-frontend-chat-ui/`](specs/008-frontend-chat-ui/spec.md) | The Angular chat view, wired to `POST /chat` |
+| [`specs/009-chat-diagnostic-trace/`](specs/009-chat-diagnostic-trace/spec.md) | Opt-out `includeTrace`/`trace` fields on `POST /chat`, backend-only |
+| [`specs/010-chat-trace-dialog/`](specs/010-chat-trace-dialog/spec.md) | The frontend trace dialog and toggle that consume feature 009's trace |
+| [`specs/011-retrieval-accuracy-tuning/`](specs/011-retrieval-accuracy-tuning/spec.md) | Retrieval constant tuning (similarity threshold, chunk size, `TOP_K`) based on evaluation results |
 | `.specify/` | speckit workflow templates |
 
 ## Setup
@@ -198,18 +224,38 @@ cd frontend && npm test && cd ..
 ```
 
 Both pass with **no database running and no Azure credentials set** — neither is required by
-either suite.
+either suite. Two opt-in Maven profiles run additional integration tests excluded from the
+default suite above:
+
+| Profile | Runs | Needs |
+|---|---|---|
+| `-Pverify-db` | Real pgvector retrieval/ranking integration tests (Testcontainers) | Docker |
+| `-Pverify-ai` | The one test that makes a real Azure OpenAI request | Azure credentials in `.env` |
+
+```powershell
+backend\mvnw.cmd test -Pverify-db
+backend\mvnw.cmd test -Pverify-ai
+```
+
+```bash
+backend/mvnw test -Pverify-db
+backend/mvnw test -Pverify-ai
+```
 
 ### Optional: Azure OpenAI
 
-Nothing in normal operation contacts Azure. If you have credentials, set these four variables
-(names fixed by the constitution, do not rename) before starting the backend:
+The scaffold, both endpoints' happy-path validation, and both default test suites all work with
+no Azure credentials configured. What actually needs them: ingesting a document (embeddings) and
+getting a real generated answer from `/chat` — without credentials, both endpoints respond
+`503 provider_unconfigured` rather than failing silently or crashing the backend. If you have
+credentials, set these four variables (names fixed by the constitution, do not rename) before
+starting the backend:
 
 ```text
 AZURE_OPEN_AI_KEY
 AZURE_OPEN_AI_ENDPOINT
 AZURE_OPEN_AI_DEPLOYMENT_NAME
-AZURE_OPEN_AI_EMBEDDING_DEPLOYMENT_NAME   # may be unset — nothing consumes embeddings yet
+AZURE_OPEN_AI_EMBEDDING_DEPLOYMENT_NAME
 ```
 
 To verify they actually work (the *only* command in the repository that contacts Azure, making
@@ -264,6 +310,12 @@ question-to-document vocabulary gaps.
 4. A question with no coverage produces an explicit "not found in documentation" answer.
 5. End-to-end response time under ~5 seconds for a typical question.
 
+Retrieval is currently tuned to `TOP_K = 5` and a `0.35` cosine similarity threshold, over
+500-token chunks with 63-token overlap — see
+[`specs/011-retrieval-accuracy-tuning/`](specs/011-retrieval-accuracy-tuning/spec.md) for why, and
+[`sample-data/evaluation-questions.csv`](sample-data/evaluation-questions.csv) for the set success
+criterion 2 is measured against.
+
 ## Out of scope for the PoC
 
 Authentication and per-user document permissions, visual design polish beyond a functional chat
@@ -271,4 +323,7 @@ interface, real confidential data, OCR of scanned PDFs, and multi-turn conversat
 
 ## Next steps
 
-See [`docs/poc-concept.md`](docs/poc-concept.md) §10 for the implementation plan.
+The concept's originally planned steps (ingestion endpoint, chat endpoint, Angular chat/upload
+views, retrieval tuning — [`docs/poc-concept.md`](docs/poc-concept.md) §10) are all implemented;
+see [Current contents](#current-contents) above for where each one landed. What remains is
+presenting the PoC and deciding what, if anything, graduates beyond it.

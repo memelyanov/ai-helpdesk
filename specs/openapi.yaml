@@ -3,9 +3,10 @@ info:
   title: ai-helpdesk API
   description: >
     RAG-based helpdesk backend: ingest documents, list/download/delete them, and ask questions
-    answered strictly from the ingested corpus with deterministic citations. Generated from the
-    controller/DTO source; see specs/api-overview.md for the human-readable companion and each
-    feature's contracts/*.md for full narrative detail.
+    answered strictly from the ingested corpus with deterministic citations, optionally with a
+    per-request diagnostic trace. Generated from the controller/DTO source; see
+    specs/api-overview.md for the human-readable companion and each feature's contracts/*.md for
+    full narrative detail.
   version: "1.0.0"
 servers:
   - url: http://localhost:8080
@@ -17,7 +18,9 @@ tags:
   - name: documents
     description: Ingest, list, download, delete documents (features 004-006)
   - name: chat
-    description: Ask a question over the ingested corpus (feature 007)
+    description: >
+      Ask a question over the ingested corpus (feature 007), with an opt-in diagnostic trace
+      (feature 009) and retrieval constants tuned by feature 011
 
 paths:
   /actuator/health:
@@ -181,6 +184,10 @@ paths:
                 value:
                   question: "Can I expense a taxi from the airport?"
                   documentIds: ["3fa85f64-5717-4562-b3fc-2c963f66afa6"]
+              withTrace:
+                value:
+                  question: "Can I expense a taxi from the airport?"
+                  includeTrace: true
       responses:
         "200":
           description: Grounded answer with citations, or the fixed "not covered" response
@@ -318,6 +325,14 @@ components:
             Optional. Present and non-empty restricts retrieval to these documents. Absent, null,
             or empty means "search the whole corpus." Every entry must be a valid UUID or the
             entire request is rejected as malformed_request.
+        includeTrace:
+          type: boolean
+          nullable: true
+          description: >
+            Optional, feature 009. true attaches the ordered diagnostic trace of this request's
+            pipeline stages to the response's trace field. null, absent, or false are all
+            equivalent to "no trace" — the response is then byte-identical to the pre-009
+            two-field contract.
 
     ChatResponse:
       type: object
@@ -333,6 +348,42 @@ components:
           items:
             $ref: "#/components/schemas/SourceCitation"
           description: Empty if and only if answer is the fixed not-covered string.
+        trace:
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/ChatTraceStep"
+          description: >
+            Present, and non-null, only when the request had includeTrace=true. At most six
+            steps, one per pipeline stage that actually ran, in execution order — fewer when the
+            pipeline stopped early. Omitted from the JSON body entirely (not serialized as
+            "trace": null) when not requested. Purely observational — never changes answer or
+            sources.
+
+    ChatTraceStep:
+      type: object
+      required: [stage, durationMs, detail]
+      properties:
+        stage:
+          type: string
+          enum:
+            - request_received
+            - question_embedded
+            - vector_search_completed
+            - results_filtered
+            - prompt_assembled
+            - model_response_received
+        durationMs:
+          type: integer
+          format: int64
+          description: Wall-clock time this stage took.
+        detail:
+          type: object
+          additionalProperties: true
+          description: >
+            Stage-specific fields, including full raw content (retrieved passage text, the
+            assembled prompt, the raw model response) verbatim, never summarized or altered. See
+            009-chat-diagnostic-trace/data-model.md for the authoritative per-stage key list.
 
     SourceCitation:
       type: object
@@ -351,7 +402,7 @@ components:
         score:
           type: number
           format: double
-          minimum: 0.5
+          minimum: 0.35
           maximum: 1
           description: 1 - cosine distance, rounded to two decimal places.
 
